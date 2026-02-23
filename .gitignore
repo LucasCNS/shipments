@@ -114,6 +114,7 @@ StyleCopReport.xml
 *.scc
 
 # Chutzpah Test files
+
 _Chutzpah*
 
 # Visual C++ cache files
@@ -416,3 +417,6 @@ FodyWeavers.xsd
 *.msix
 *.msm
 *.msp
+
+# Detalhes do projeto
+projeto-shipments.md
