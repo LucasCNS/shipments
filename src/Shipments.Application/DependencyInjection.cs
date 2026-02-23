@@ -1,5 +1,6 @@
 using Microsoft.Extensions.DependencyInjection;
 using Shipments.Application.UseCases.CreateShipment;
+using Shipments.Application.UseCases.GetShipmentById;
 
 namespace Shipments.Application;
 
@@ -16,6 +17,7 @@ public static class DependencyInjection
     public static IServiceCollection AddApplication(this IServiceCollection services)
     {
         services.AddScoped<ICreateShipmentUseCase, CreateShipmentUseCase>();
+        services.AddScoped<IGetShipmentByIdUseCase, GetShipmentByIdUseCase>();
         return services;
     }
 }

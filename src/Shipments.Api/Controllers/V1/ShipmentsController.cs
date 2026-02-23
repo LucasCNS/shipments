@@ -4,6 +4,7 @@ using Asp.Versioning;
 using Microsoft.AspNetCore.Http;
 using Microsoft.AspNetCore.Mvc;
 using Shipments.Application.UseCases.CreateShipment;
+using Shipments.Application.UseCases.GetShipmentById;
 
 namespace Shipments.Api.Controllers.V1;
 
@@ -61,5 +62,54 @@ public class ShipmentsController : ControllerBase
 
         // Return 201 Created
         return StatusCode(StatusCodes.Status201Created, output);
+    }
+
+    /// <summary>
+    /// Retrieves a shipment by its ID.
+    /// </summary>
+    /// <param name="useCase">The get shipment by ID use case.</param>
+    /// <param name="id">The shipment ID to retrieve.</param>
+    /// <param name="cancellationToken">Cancellation token for the operation.</param>
+    /// <returns>The shipment details with status 200 OK.</returns>
+    /// <response code="200">Shipment found and returned successfully.</response>
+    /// <response code="400">Invalid shipment ID format.</response>
+    /// <response code="404">Shipment not found.</response>
+    [HttpGet("{id}")]
+    [ProducesResponseType(StatusCodes.Status200OK)]
+    [ProducesResponseType(StatusCodes.Status400BadRequest)]
+    [ProducesResponseType(StatusCodes.Status404NotFound)]
+    public async Task<IActionResult> GetByIdAsync(
+        [FromServices] IGetShipmentByIdUseCase useCase,
+        [FromRoute] string id,
+        CancellationToken cancellationToken)
+    {
+        // Extract Creator from header (for consistency, though not strictly required for GET)
+        var creator = Request.Headers["Creator"].ToString();
+
+        if (string.IsNullOrWhiteSpace(creator))
+        {
+            return Problem(
+                detail: "The 'Creator' header is required.",
+                statusCode: StatusCodes.Status400BadRequest,
+                title: "Missing Creator Header");
+        }
+
+        // Create input
+        var input = new GetShipmentByIdInput { ShipmentId = id };
+
+        // Execute use case
+        var output = await useCase.HandleAsync(input, cancellationToken);
+
+        // Check if there was an error
+        if (output.Error != null)
+        {
+            return Problem(
+                detail: output.Error.Message,
+                statusCode: output.Error.CorrespondingStatusCode,
+                title: output.Error.Code);
+        }
+
+        // Return 200 OK
+        return Ok(output);
     }
 }
