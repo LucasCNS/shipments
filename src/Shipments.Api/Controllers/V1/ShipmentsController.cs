@@ -5,6 +5,7 @@ using Microsoft.AspNetCore.Http;
 using Microsoft.AspNetCore.Mvc;
 using Shipments.Application.UseCases.CreateShipment;
 using Shipments.Application.UseCases.GetShipmentById;
+using Shipments.Application.UseCases.ListShipments;
 
 namespace Shipments.Api.Controllers.V1;
 
@@ -62,6 +63,63 @@ public class ShipmentsController : ControllerBase
 
         // Return 201 Created
         return StatusCode(StatusCodes.Status201Created, output);
+    }
+
+    /// <summary>
+    /// Lists shipments with optional filtering by status and pagination.
+    /// </summary>
+    /// <param name="useCase">The list shipments use case.</param>
+    /// <param name="status">Optional status filter (pending, in_transit, delivered, cancelled).</param>
+    /// <param name="limit">Number of records to return (default: 10, max: 100).</param>
+    /// <param name="offset">Number of records to skip (default: 0).</param>
+    /// <param name="cancellationToken">Cancellation token for the operation.</param>
+    /// <returns>A paginated list of shipments with status 200 OK.</returns>
+    /// <response code="200">Shipments retrieved successfully.</response>
+    /// <response code="400">Invalid query parameters or missing Creator header.</response>
+    [HttpGet]
+    [ProducesResponseType(StatusCodes.Status200OK)]
+    [ProducesResponseType(StatusCodes.Status400BadRequest)]
+    public async Task<IActionResult> ListAsync(
+        [FromServices] IListShipmentsUseCase useCase,
+        [FromQuery] string? status,
+        [FromQuery] int limit = 10,
+        [FromQuery] int offset = 0,
+        CancellationToken cancellationToken = default)
+    {
+        // Extract Creator from header
+        var creator = Request.Headers["Creator"].ToString();
+
+        if (string.IsNullOrWhiteSpace(creator))
+        {
+            return Problem(
+                detail: "The 'Creator' header is required.",
+                statusCode: StatusCodes.Status400BadRequest,
+                title: "Missing Creator Header");
+        }
+
+        // Create input
+        var input = new ListShipmentsInput
+        {
+            Status = status,
+            Limit = limit,
+            Offset = offset,
+            Creator = creator
+        };
+
+        // Execute use case
+        var output = await useCase.HandleAsync(input, cancellationToken);
+
+        // Check if there was a validation error
+        if (output.Error != null)
+        {
+            return Problem(
+                detail: output.Error.Message,
+                statusCode: output.Error.CorrespondingStatusCode,
+                title: output.Error.Code);
+        }
+
+        // Return 200 OK
+        return Ok(output);
     }
 
     /// <summary>

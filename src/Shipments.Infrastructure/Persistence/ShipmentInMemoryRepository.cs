@@ -1,5 +1,7 @@
 using System;
 using System.Collections.Generic;
+using System.Linq;
+using System.Threading;
 using System.Threading.Tasks;
 using Shipments.Application.Repositories;
 using Shipments.Domain.Models;
@@ -40,6 +42,55 @@ public class ShipmentInMemoryRepository : IShipmentRepository
         {
             var shipment = _shipments.Find(s => s.Id == id);
             return Task.FromResult(shipment);
+        }
+    }
+
+    /// <summary>
+    /// Retrieves all shipments with optional filtering and pagination.
+    /// </summary>
+    /// <param name="status">Optional status filter.</param>
+    /// <param name="offset">Number of records to skip.</param>
+    /// <param name="limit">Number of records to return.</param>
+    /// <param name="cancellationToken">Cancellation token for the operation.</param>
+    /// <returns>A collection of shipments matching the criteria.</returns>
+    public Task<IEnumerable<Shipment>> GetAllAsync(string? status = null, int offset = 0, int limit = 10, CancellationToken cancellationToken = default)
+    {
+        lock (_lock)
+        {
+            var query = _shipments.AsEnumerable();
+
+            // Apply status filter if provided
+            if (!string.IsNullOrWhiteSpace(status))
+            {
+                query = query.Where(s => s.Status == status);
+            }
+
+            // Apply pagination: skip offset records, then take limit records
+            var result = query.Skip(offset).Take(limit).ToList();
+            return Task.FromResult(result.AsEnumerable());
+        }
+    }
+
+    /// <summary>
+    /// Gets the total count of shipments matching the optional status filter.
+    /// </summary>
+    /// <param name="status">Optional status filter.</param>
+    /// <param name="cancellationToken">Cancellation token for the operation.</param>
+    /// <returns>The total count of shipments matching the filter.</returns>
+    public Task<int> GetCountAsync(string? status = null, CancellationToken cancellationToken = default)
+    {
+        lock (_lock)
+        {
+            var query = _shipments.AsEnumerable();
+
+            // Apply status filter if provided
+            if (!string.IsNullOrWhiteSpace(status))
+            {
+                query = query.Where(s => s.Status == status);
+            }
+
+            var count = query.Count();
+            return Task.FromResult(count);
         }
     }
 
