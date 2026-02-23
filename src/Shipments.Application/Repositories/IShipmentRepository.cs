@@ -1,3 +1,4 @@
+using System;
 using System.Threading.Tasks;
 using Shipments.Domain.Models;
 
@@ -14,4 +15,11 @@ public interface IShipmentRepository
     /// <param name="shipment">The shipment to create.</param>
     /// <returns>The created shipment.</returns>
     Task<Shipment> CreateAsync(Shipment shipment);
+
+    /// <summary>
+    /// Retrieves a shipment by its unique identifier.
+    /// </summary>
+    /// <param name="id">The shipment identifier.</param>
+    /// <returns>The shipment if found; null otherwise.</returns>
+    Task<Shipment?> GetByIdAsync(Guid id);
 }

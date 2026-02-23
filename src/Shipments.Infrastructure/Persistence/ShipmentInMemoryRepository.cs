@@ -30,6 +30,20 @@ public class ShipmentInMemoryRepository : IShipmentRepository
     }
 
     /// <summary>
+    /// Retrieves a shipment by its unique identifier.
+    /// </summary>
+    /// <param name="id">The shipment identifier.</param>
+    /// <returns>The shipment if found; null otherwise.</returns>
+    public Task<Shipment?> GetByIdAsync(Guid id)
+    {
+        lock (_lock)
+        {
+            var shipment = _shipments.Find(s => s.Id == id);
+            return Task.FromResult(shipment);
+        }
+    }
+
+    /// <summary>
     /// Gets all shipments stored in memory.
     /// For internal use and testing purposes.
     /// </summary>
