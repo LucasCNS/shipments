@@ -1,3 +1,4 @@
+using System.ComponentModel.DataAnnotations;
 using System.Threading;
 using System.Threading.Tasks;
 using Asp.Versioning;
@@ -23,6 +24,7 @@ public class ShipmentsController : ControllerBase
     /// </summary>
     /// <param name="useCase">The create shipment use case.</param>
     /// <param name="input">The shipment data to create.</param>
+    /// <param name="creator">Required header to identify the request creator.</param>
     /// <param name="cancellationToken">Cancellation token for the operation.</param>
     /// <returns>The created shipment with status 201 Created.</returns>
     /// <response code="201">Shipment created successfully.</response>
@@ -32,11 +34,12 @@ public class ShipmentsController : ControllerBase
     [ProducesResponseType(StatusCodes.Status400BadRequest)]
     public async Task<IActionResult> CreateAsync(
         [FromServices] ICreateShipmentUseCase useCase,
+        [FromHeader][Required] string creator,
         [FromBody] CreateShipmentInput input,
         CancellationToken cancellationToken)
     {
-        // Extract Creator from header
-        var creator = Request.Headers["Creator"].ToString();
+        // Assign Creator to input
+        input.Creator = creator;
 
         if (string.IsNullOrWhiteSpace(creator))
         {
@@ -72,6 +75,7 @@ public class ShipmentsController : ControllerBase
     /// <param name="status">Optional status filter (pending, in_transit, delivered, cancelled).</param>
     /// <param name="limit">Number of records to return (default: 10, max: 100).</param>
     /// <param name="offset">Number of records to skip (default: 0).</param>
+    /// <param name="creator">Required header to identify the request creator.</param>
     /// <param name="cancellationToken">Cancellation token for the operation.</param>
     /// <returns>A paginated list of shipments with status 200 OK.</returns>
     /// <response code="200">Shipments retrieved successfully.</response>
@@ -81,22 +85,12 @@ public class ShipmentsController : ControllerBase
     [ProducesResponseType(StatusCodes.Status400BadRequest)]
     public async Task<IActionResult> ListAsync(
         [FromServices] IListShipmentsUseCase useCase,
+        [FromHeader][Required] string creator,
         [FromQuery] string? status,
         [FromQuery] int limit = 10,
         [FromQuery] int offset = 0,
         CancellationToken cancellationToken = default)
     {
-        // Extract Creator from header
-        var creator = Request.Headers["Creator"].ToString();
-
-        if (string.IsNullOrWhiteSpace(creator))
-        {
-            return Problem(
-                detail: "The 'Creator' header is required.",
-                statusCode: StatusCodes.Status400BadRequest,
-                title: "Missing Creator Header");
-        }
-
         // Create input
         var input = new ListShipmentsInput
         {
@@ -127,10 +121,11 @@ public class ShipmentsController : ControllerBase
     /// </summary>
     /// <param name="useCase">The get shipment by ID use case.</param>
     /// <param name="id">The shipment ID to retrieve.</param>
+    /// <param name="creator">Required header to identify the request creator.</param>
     /// <param name="cancellationToken">Cancellation token for the operation.</param>
     /// <returns>The shipment details with status 200 OK.</returns>
     /// <response code="200">Shipment found and returned successfully.</response>
-    /// <response code="400">Invalid shipment ID format.</response>
+    /// <response code="400">Invalid shipment ID format or missing Creator header.</response>
     /// <response code="404">Shipment not found.</response>
     [HttpGet("{id}")]
     [ProducesResponseType(StatusCodes.Status200OK)]
@@ -139,19 +134,9 @@ public class ShipmentsController : ControllerBase
     public async Task<IActionResult> GetByIdAsync(
         [FromServices] IGetShipmentByIdUseCase useCase,
         [FromRoute] string id,
+        [FromHeader][Required] string creator,
         CancellationToken cancellationToken)
     {
-        // Extract Creator from header (for consistency, though not strictly required for GET)
-        var creator = Request.Headers["Creator"].ToString();
-
-        if (string.IsNullOrWhiteSpace(creator))
-        {
-            return Problem(
-                detail: "The 'Creator' header is required.",
-                statusCode: StatusCodes.Status400BadRequest,
-                title: "Missing Creator Header");
-        }
-
         // Create input
         var input = new GetShipmentByIdInput { ShipmentId = id };
 
