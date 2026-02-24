@@ -420,3 +420,9 @@ FodyWeavers.xsd
 
 # Detalhes do projeto
 projeto-shipments.md
+rest-client-tests.http
+test-list-shipments.ps1
+curl-tests-list-shipments.sh
+test-list-shipments-guide.md
+
+
