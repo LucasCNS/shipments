@@ -108,6 +108,26 @@ public class ShipmentInMemoryRepository : IShipmentRepository
     }
 
     /// <summary>
+    /// Updates an existing shipment.
+    /// </summary>
+    /// <param name="shipment">The shipment with updated data.</param>
+    /// <returns>The updated shipment if successful; null if shipment not found.</returns>
+    public Task<Shipment?> UpdateAsync(Shipment shipment)
+    {
+        lock (_lock)
+        {
+            var existingIndex = _shipments.FindIndex(s => s.Id == shipment.Id);
+            if (existingIndex < 0)
+            {
+                return Task.FromResult<Shipment?>(null);
+            }
+
+            _shipments[existingIndex] = shipment;
+            return Task.FromResult<Shipment?>(shipment);
+        }
+    }
+
+    /// <summary>
     /// Clears all shipments from memory.
     /// For testing purposes only.
     /// </summary>
