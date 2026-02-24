@@ -42,4 +42,11 @@ public interface IShipmentRepository
     /// <param name="cancellationToken">Cancellation token for the operation.</param>
     /// <returns>The total count of shipments matching the filter.</returns>
     Task<int> GetCountAsync(string? status = null, CancellationToken cancellationToken = default);
+
+    /// <summary>
+    /// Updates an existing shipment.
+    /// </summary>
+    /// <param name="shipment">The shipment with updated data.</param>
+    /// <returns>The updated shipment if successful; null if shipment not found.</returns>
+    Task<Shipment?> UpdateAsync(Shipment shipment);
 }

@@ -7,6 +7,7 @@ using Microsoft.AspNetCore.Mvc;
 using Shipments.Application.UseCases.CreateShipment;
 using Shipments.Application.UseCases.GetShipmentById;
 using Shipments.Application.UseCases.ListShipments;
+using Shipments.Application.UseCases.UpdateShipment;
 
 namespace Shipments.Api.Controllers.V1;
 
@@ -139,6 +140,51 @@ public class ShipmentsController : ControllerBase
     {
         // Create input
         var input = new GetShipmentByIdInput { ShipmentId = id };
+
+        // Execute use case
+        var output = await useCase.HandleAsync(input, cancellationToken);
+
+        // Check if there was an error
+        if (output.Error != null)
+        {
+            return Problem(
+                detail: output.Error.Message,
+                statusCode: output.Error.CorrespondingStatusCode,
+                title: output.Error.Code);
+        }
+
+        // Return 200 OK
+        return Ok(output);
+    }
+
+    /// <summary>
+    /// Updates an existing shipment.
+    /// </summary>
+    /// <param name="useCase">The update shipment use case.</param>
+    /// <param name="id">The shipment ID to update.</param>
+    /// <param name="creator">Required header to identify the request creator.</param>
+    /// <param name="input">The shipment data to update.</param>
+    /// <param name="cancellationToken">Cancellation token for the operation.</param>
+    /// <returns>The updated shipment with status 200 OK.</returns>
+    /// <response code="200">Shipment updated successfully.</response>
+    /// <response code="400">Invalid input data or missing Creator header.</response>
+    /// <response code="404">Shipment not found.</response>
+    /// <response code="409">Shipment cannot be updated (e.g., not in pending status).</response>
+    [HttpPut("{id}")]
+    [ProducesResponseType(StatusCodes.Status200OK)]
+    [ProducesResponseType(StatusCodes.Status400BadRequest)]
+    [ProducesResponseType(StatusCodes.Status404NotFound)]
+    [ProducesResponseType(StatusCodes.Status409Conflict)]
+    public async Task<IActionResult> UpdateAsync(
+        [FromServices] IUpdateShipmentUseCase useCase,
+        [FromRoute] string id,
+        [FromHeader][Required] string creator,
+        [FromBody] UpdateShipmentInput input,
+        CancellationToken cancellationToken)
+    {
+        // Assign ID and Creator to input
+        input.Id = id;
+        input.Creator = creator;
 
         // Execute use case
         var output = await useCase.HandleAsync(input, cancellationToken);
