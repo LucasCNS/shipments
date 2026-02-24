@@ -1,6 +1,7 @@
 using Microsoft.Extensions.DependencyInjection;
 using Shipments.Application.UseCases.CreateShipment;
 using Shipments.Application.UseCases.GetShipmentById;
+using Shipments.Application.UseCases.ListShipments;
 
 namespace Shipments.Application;
 
@@ -18,6 +19,7 @@ public static class DependencyInjection
     {
         services.AddScoped<ICreateShipmentUseCase, CreateShipmentUseCase>();
         services.AddScoped<IGetShipmentByIdUseCase, GetShipmentByIdUseCase>();
+        services.AddScoped<IListShipmentsUseCase, ListShipmentsUseCase>();
         return services;
     }
 }
