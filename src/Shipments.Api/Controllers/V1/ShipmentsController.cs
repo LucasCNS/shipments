@@ -42,27 +42,13 @@ public class ShipmentsController : ControllerBase
         // Assign Creator to input
         input.Creator = creator;
 
-        if (string.IsNullOrWhiteSpace(creator))
-        {
-            return Problem(
-                detail: "The 'Creator' header is required.",
-                statusCode: StatusCodes.Status400BadRequest,
-                title: "Missing Creator Header");
-        }
-
-        // Assign Creator to input
-        input.Creator = creator;
-
         // Execute use case
         var output = await useCase.HandleAsync(input, cancellationToken);
 
         // Check if there was a validation error
         if (output.Error != null)
         {
-            return Problem(
-                detail: output.Error.Message,
-                statusCode: output.Error.CorrespondingStatusCode,
-                title: output.Error.Code);
+            return HandleUseCaseError(output.Error);
         }
 
         // Return 201 Created
@@ -107,10 +93,7 @@ public class ShipmentsController : ControllerBase
         // Check if there was a validation error
         if (output.Error != null)
         {
-            return Problem(
-                detail: output.Error.Message,
-                statusCode: output.Error.CorrespondingStatusCode,
-                title: output.Error.Code);
+            return HandleUseCaseError(output.Error);
         }
 
         // Return 200 OK
@@ -147,10 +130,7 @@ public class ShipmentsController : ControllerBase
         // Check if there was an error
         if (output.Error != null)
         {
-            return Problem(
-                detail: output.Error.Message,
-                statusCode: output.Error.CorrespondingStatusCode,
-                title: output.Error.Code);
+            return HandleUseCaseError(output.Error);
         }
 
         // Return 200 OK
@@ -192,13 +172,23 @@ public class ShipmentsController : ControllerBase
         // Check if there was an error
         if (output.Error != null)
         {
-            return Problem(
-                detail: output.Error.Message,
-                statusCode: output.Error.CorrespondingStatusCode,
-                title: output.Error.Code);
+            return HandleUseCaseError(output.Error);
         }
 
         // Return 200 OK
         return Ok(output);
+    }
+
+    /// <summary>
+    /// Handles use case errors by returning a Problem response.
+    /// </summary>
+    /// <param name="error">The error from the use case execution.</param>
+    /// <returns>A Problem response with appropriate status code.</returns>
+    private IActionResult HandleUseCaseError(Domain.Results.Error error)
+    {
+        return Problem(
+            detail: error.Message,
+            statusCode: error.CorrespondingStatusCode,
+            title: error.Code);
     }
 }
