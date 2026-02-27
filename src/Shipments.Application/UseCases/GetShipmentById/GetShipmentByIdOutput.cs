@@ -1,4 +1,5 @@
 using System;
+using System.Text.Json.Serialization;
 using Shipments.Domain.Models;
 using Shipments.Domain.Results;
 
@@ -62,5 +63,6 @@ public class GetShipmentByIdOutput
     /// <summary>
     /// Error information if the operation failed; null if successful.
     /// </summary>
+    [JsonIgnore(Condition = JsonIgnoreCondition.WhenWritingNull)]
     public Error? Error { get; set; }
 }
