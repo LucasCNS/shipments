@@ -186,6 +186,23 @@ public class ShipmentsController : ControllerBase
     /// <returns>A Problem response with appropriate status code.</returns>
     private IActionResult HandleUseCaseError(Domain.Results.Error error)
     {
+        // If there are multiple validation errors, return them all
+        if (error.ValidationErrors.Count > 0)
+        {
+            return new JsonResult(
+                new
+                {
+                    type = "https://tools.ietf.org/html/rfc7231#section-6.5.1",
+                    title = error.Code,
+                    status = error.CorrespondingStatusCode,
+                    detail = error.Message,
+                    errors = error.ValidationErrors
+                })
+            {
+                StatusCode = error.CorrespondingStatusCode
+            };
+        }
+
         return Problem(
             detail: error.Message,
             statusCode: error.CorrespondingStatusCode,

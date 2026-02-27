@@ -1,4 +1,5 @@
 using System;
+using System.Collections.Generic;
 using Shipments.Application.UseCases.GetShipmentById;
 using Shipments.Domain.Results;
 
@@ -16,24 +17,27 @@ public class GetShipmentByIdValidator
     /// <returns>Error if validation fails; null if valid.</returns>
     public static Error? Validate(GetShipmentByIdInput input)
     {
+        var validationErrors = new List<string>();
+
         // Validate ShipmentId is not empty
         if (string.IsNullOrWhiteSpace(input.ShipmentId))
         {
-            return new Error
-            {
-                Code = "EMPTY_SHIPMENT_ID",
-                Message = "ShipmentId is required and cannot be empty.",
-                CorrespondingStatusCode = 400
-            };
+            validationErrors.Add("ShipmentId is required and cannot be empty.");
+        }
+        // Validate ShipmentId is a valid UUID format
+        else if (!Guid.TryParse(input.ShipmentId, out _))
+        {
+            validationErrors.Add("ShipmentId must be a valid UUID.");
         }
 
-        // Validate ShipmentId is a valid UUID format
-        if (!Guid.TryParse(input.ShipmentId, out _))
+        // Return error if there are any validation errors
+        if (validationErrors.Count > 0)
         {
             return new Error
             {
-                Code = "INVALID_UUID_FORMAT",
-                Message = "ShipmentId must be a valid UUID.",
+                Code = "VALIDATION_ERROR",
+                Message = "One or more validation errors occurred.",
+                ValidationErrors = validationErrors,
                 CorrespondingStatusCode = 400
             };
         }
