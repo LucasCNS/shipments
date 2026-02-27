@@ -1,3 +1,5 @@
+using System.Collections.Generic;
+
 namespace Shipments.Domain.Results;
 
 /// <summary>
@@ -19,4 +21,9 @@ public class Error
     /// The HTTP status code corresponding to this error.
     /// </summary>
     public int CorrespondingStatusCode { get; set; }
+
+    /// <summary>
+    /// List of validation error messages (when multiple validation errors occur).
+    /// </summary>
+    public List<string> ValidationErrors { get; set; } = new();
 }

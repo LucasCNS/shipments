@@ -1,4 +1,5 @@
 using System;
+using System.Collections.Generic;
 using System.Linq;
 using Shipments.Application.UseCases.ListShipments;
 using Shipments.Domain.Results;
@@ -20,15 +21,12 @@ public class ListShipmentsValidator
     /// <returns>Error if validation fails; null if valid.</returns>
     public static Error? Validate(ListShipmentsInput input)
     {
+        var validationErrors = new List<string>();
+
         // Validate Creator - not empty
         if (string.IsNullOrWhiteSpace(input.Creator))
         {
-            return new Error
-            {
-                Code = "EMPTY_CREATOR",
-                Message = "The 'Creator' header is required.",
-                CorrespondingStatusCode = 400
-            };
+            validationErrors.Add("The 'Creator' header is required.");
         }
 
         // Validate Status - must be a valid status or null
@@ -36,43 +34,35 @@ public class ListShipmentsValidator
         {
             if (!IsValidStatus(input.Status))
             {
-                return new Error
-                {
-                    Code = "INVALID_STATUS",
-                    Message = $"Status must be one of: {string.Join(", ", ValidStatuses)}.",
-                    CorrespondingStatusCode = 400
-                };
+                validationErrors.Add($"Status must be one of: {string.Join(", ", ValidStatuses)}.");
             }
         }
 
         // Validate Offset - must be >= 0
         if (input.Offset < 0)
         {
-            return new Error
-            {
-                Code = "INVALID_OFFSET",
-                Message = "Offset must be greater than or equal to 0.",
-                CorrespondingStatusCode = 400
-            };
+            validationErrors.Add("Offset must be greater than or equal to 0.");
         }
 
         // Validate Limit - must be > 0 and <= MaxLimit
         if (input.Limit <= 0)
         {
-            return new Error
-            {
-                Code = "INVALID_LIMIT",
-                Message = "Limit must be greater than 0.",
-                CorrespondingStatusCode = 400
-            };
+            validationErrors.Add("Limit must be greater than 0.");
         }
 
         if (input.Limit > MaxLimit)
         {
+            validationErrors.Add($"Limit must not exceed {MaxLimit}.");
+        }
+
+        // Return error if there are any validation errors
+        if (validationErrors.Count > 0)
+        {
             return new Error
             {
-                Code = "LIMIT_EXCEEDED",
-                Message = $"Limit must not exceed {MaxLimit}.",
+                Code = "VALIDATION_ERROR",
+                Message = "One or more validation errors occurred.",
+                ValidationErrors = validationErrors,
                 CorrespondingStatusCode = 400
             };
         }
@@ -90,3 +80,4 @@ public class ListShipmentsValidator
         return ValidStatuses.Contains(status.ToLowerInvariant());
     }
 }
+

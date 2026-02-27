@@ -1,3 +1,4 @@
+using System.Collections.Generic;
 using System.Text.RegularExpressions;
 using Shipments.Application.UseCases.CreateShipment;
 using Shipments.Domain.Results;
@@ -16,88 +17,60 @@ public class CreateShipmentValidator
     /// <returns>Error if validation fails; null if valid.</returns>
     public static Error? Validate(CreateShipmentInput input)
     {
+        var validationErrors = new List<string>();
+
         // Validate PackageName - not empty and no special characters
         if (string.IsNullOrWhiteSpace(input.PackageName))
         {
-            return new Error
-            {
-                Code = "EMPTY_PACKAGE_NAME",
-                Message = "PackageName is required and cannot be empty.",
-                CorrespondingStatusCode = 400
-            };
+            validationErrors.Add("PackageName is required and cannot be empty.");
         }
-
-        if (ContainsSpecialCharacters(input.PackageName))
+        else if (ContainsSpecialCharacters(input.PackageName))
         {
-            return new Error
-            {
-                Code = "INVALID_PACKAGE_NAME",
-                Message = "PackageName contains invalid characters.",
-                CorrespondingStatusCode = 400
-            };
+            validationErrors.Add("PackageName contains invalid characters.");
         }
 
         // Validate Weight > 0
         if (input.Weight <= 0)
         {
-            return new Error
-            {
-                Code = "INVALID_WEIGHT",
-                Message = "Weight must be greater than zero.",
-                CorrespondingStatusCode = 400
-            };
+            validationErrors.Add("Weight must be greater than zero.");
         }
 
         // Validate Dimensions - all > 0
         if (input.Dimensions == null)
         {
-            return new Error
-            {
-                Code = "MISSING_DIMENSIONS",
-                Message = "Dimensions are required.",
-                CorrespondingStatusCode = 400
-            };
+            validationErrors.Add("Dimensions are required.");
         }
-
-        if (input.Dimensions.Length <= 0 || input.Dimensions.Width <= 0 || input.Dimensions.Height <= 0)
+        else if (input.Dimensions.Length <= 0 || input.Dimensions.Width <= 0 || input.Dimensions.Height <= 0)
         {
-            return new Error
-            {
-                Code = "INVALID_DIMENSIONS",
-                Message = "All dimensions (length, width, height) must be greater than zero.",
-                CorrespondingStatusCode = 400
-            };
+            validationErrors.Add("All dimensions (length, width, height) must be greater than zero.");
         }
 
         // Validate ShippingCost > 0
         if (input.ShippingCost <= 0)
         {
-            return new Error
-            {
-                Code = "INVALID_SHIPPING_COST",
-                Message = "ShippingCost must be greater than zero.",
-                CorrespondingStatusCode = 400
-            };
+            validationErrors.Add("ShippingCost must be greater than zero.");
         }
 
         // Validate DestinationAddress - not empty
         if (string.IsNullOrWhiteSpace(input.DestinationAddress))
         {
-            return new Error
-            {
-                Code = "EMPTY_DESTINATION_ADDRESS",
-                Message = "DestinationAddress is required and cannot be empty.",
-                CorrespondingStatusCode = 400
-            };
+            validationErrors.Add("DestinationAddress is required and cannot be empty.");
         }
 
         // Validate Creator - not empty
         if (string.IsNullOrWhiteSpace(input.Creator))
         {
+            validationErrors.Add("Creator is required and cannot be empty.");
+        }
+
+        // Return error if there are any validation errors
+        if (validationErrors.Count > 0)
+        {
             return new Error
             {
-                Code = "EMPTY_CREATOR",
-                Message = "Creator is required and cannot be empty.",
+                Code = "VALIDATION_ERROR",
+                Message = "One or more validation errors occurred.",
+                ValidationErrors = validationErrors,
                 CorrespondingStatusCode = 400
             };
         }
