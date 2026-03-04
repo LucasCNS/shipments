@@ -3,6 +3,7 @@ using System.Threading;
 using System.Threading.Tasks;
 using Microsoft.Extensions.Logging;
 using Shipments.Application.Repositories;
+using Shipments.Application.StateTransitions;
 using Shipments.Application.Validators;
 using Shipments.Domain.Models;
 
@@ -85,16 +86,39 @@ public class UpdateShipmentUseCase : IUpdateShipmentUseCase
             };
         }
 
-        // Validate shipment status is "pending"
-        if (existingShipment.Status != "pending")
+        // Validate status transition if status is provided
+        if (!string.IsNullOrWhiteSpace(input.Status))
         {
-            _logger.LogWarning("Attempt to update shipment in non-pending status: {ShipmentId}, Status: {Status}",
+            var transitionError = ShipmentStateTransitionValidator.Validate(existingShipment.Status, input.Status);
+            if (transitionError != null)
+            {
+                _logger.LogWarning("Invalid status transition for shipment {ShipmentId}: {CurrentStatus} → {NewStatus}",
+                    shipmentId, existingShipment.Status, input.Status);
+
+                return new UpdateShipmentOutput
+                {
+                    Error = transitionError
+                };
+            }
+        }
+
+        // Check if data fields are being updated
+        var hasDataFields = !string.IsNullOrWhiteSpace(input.PackageName) ||
+                           input.Weight.HasValue ||
+                           input.Dimensions != null ||
+                           input.ShippingCost.HasValue ||
+                           !string.IsNullOrWhiteSpace(input.DestinationAddress);
+
+        // Data fields can only be updated when status is "pending"
+        if (hasDataFields && existingShipment.Status != "pending")
+        {
+            _logger.LogWarning("Attempt to update data fields of shipment in non-pending status: {ShipmentId}, Status: {Status}",
                 shipmentId, existingShipment.Status);
 
             var error = new Domain.Results.Error
             {
                 Code = "SHIPMENT_NOT_UPDATABLE",
-                Message = $"Shipment with status '{existingShipment.Status}' cannot be updated. Only shipments with 'pending' status can be updated.",
+                Message = $"Shipment with status '{existingShipment.Status}' cannot have its data fields updated. Only shipments with 'pending' status can have data fields updated.",
                 CorrespondingStatusCode = 409
             };
 
@@ -105,11 +129,7 @@ public class UpdateShipmentUseCase : IUpdateShipmentUseCase
         }
 
         // Check if at least one field is provided for update
-        var hasFieldsToUpdate = !string.IsNullOrWhiteSpace(input.PackageName) ||
-                               input.Weight.HasValue ||
-                               input.Dimensions != null ||
-                               input.ShippingCost.HasValue ||
-                               !string.IsNullOrWhiteSpace(input.DestinationAddress);
+        var hasFieldsToUpdate = hasDataFields || !string.IsNullOrWhiteSpace(input.Status);
 
         if (!hasFieldsToUpdate)
         {
@@ -150,6 +170,14 @@ public class UpdateShipmentUseCase : IUpdateShipmentUseCase
         if (!string.IsNullOrWhiteSpace(input.DestinationAddress))
         {
             existingShipment.DestinationAddress = input.DestinationAddress;
+        }
+
+        if (!string.IsNullOrWhiteSpace(input.Status))
+        {
+            var oldStatus = existingShipment.Status;
+            existingShipment.Status = input.Status;
+            _logger.LogInformation("Status transition for shipment {ShipmentId}: {OldStatus} → {NewStatus}",
+                shipmentId, oldStatus, input.Status);
         }
 
         // Update the last modified date
