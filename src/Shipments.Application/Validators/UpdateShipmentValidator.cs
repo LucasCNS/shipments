@@ -1,6 +1,7 @@
 using System;
 using System.Collections.Generic;
 using System.Text.RegularExpressions;
+using Shipments.Application.StateTransitions;
 using Shipments.Application.UseCases.UpdateShipment;
 using Shipments.Domain.Results;
 
@@ -70,6 +71,12 @@ public class UpdateShipmentValidator
         if (!string.IsNullOrWhiteSpace(input.DestinationAddress) && string.IsNullOrWhiteSpace(input.DestinationAddress))
         {
             validationErrors.Add("DestinationAddress cannot be empty.");
+        }
+
+        // Validate Status if provided
+        if (!string.IsNullOrWhiteSpace(input.Status) && !ShipmentStateTransitionValidator.IsValidStatus(input.Status))
+        {
+            validationErrors.Add($"Status '{input.Status}' is not a valid status. Valid statuses are: pending, in_transit, delivered, cancelled.");
         }
 
         // Return error if there are any validation errors

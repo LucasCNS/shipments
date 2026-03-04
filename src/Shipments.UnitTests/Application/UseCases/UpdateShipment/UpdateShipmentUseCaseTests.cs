@@ -422,4 +422,328 @@ public class UpdateShipmentUseCaseTests
         Assert.Equal("Creator1", result.Creator);
         Assert.Equal("pending", result.Status);
     }
+
+    // ===== Status transition tests =====
+
+    /// <summary>
+    /// PUT with status = "in_transit" on a pending shipment should succeed.
+    /// </summary>
+    [Fact]
+    public async Task HandleAsync_WithStatusInTransitOnPendingShipment_ShouldSucceed()
+    {
+        // Arrange
+        var shipmentId = Guid.NewGuid();
+        var existingShipment = new Shipment
+        {
+            Id = shipmentId,
+            PackageName = "Package",
+            Weight = 5m,
+            Dimensions = new Dimensions { Length = 10, Width = 10, Height = 10 },
+            ShippingCost = 100m,
+            DestinationAddress = "Address",
+            DateCreated = DateTime.UtcNow,
+            DateLastUpdated = DateTime.UtcNow,
+            Creator = "Creator1",
+            Status = "pending"
+        };
+
+        var input = new UpdateShipmentInput
+        {
+            Id = shipmentId.ToString(),
+            Creator = "Creator1",
+            Status = "in_transit"
+        };
+
+        _repositoryMock
+            .Setup(repo => repo.GetByIdAsync(shipmentId))
+            .ReturnsAsync(existingShipment);
+
+        _repositoryMock
+            .Setup(repo => repo.UpdateAsync(It.IsAny<Shipment>()))
+            .ReturnsAsync((Shipment s) => s);
+
+        // Act
+        var result = await _useCase.HandleAsync(input, CancellationToken.None);
+
+        // Assert
+        Assert.NotNull(result);
+        Assert.Null(result.Error);
+        Assert.Equal("in_transit", result.Status);
+        _repositoryMock.Verify(repo => repo.UpdateAsync(It.IsAny<Shipment>()), Times.Once);
+    }
+
+    /// <summary>
+    /// PUT with status = "cancelled" on a pending shipment should succeed.
+    /// </summary>
+    [Fact]
+    public async Task HandleAsync_WithStatusCancelledOnPendingShipment_ShouldSucceed()
+    {
+        // Arrange
+        var shipmentId = Guid.NewGuid();
+        var existingShipment = new Shipment
+        {
+            Id = shipmentId,
+            PackageName = "Package",
+            Weight = 5m,
+            Dimensions = new Dimensions { Length = 10, Width = 10, Height = 10 },
+            ShippingCost = 100m,
+            DestinationAddress = "Address",
+            DateCreated = DateTime.UtcNow,
+            DateLastUpdated = DateTime.UtcNow,
+            Creator = "Creator1",
+            Status = "pending"
+        };
+
+        var input = new UpdateShipmentInput
+        {
+            Id = shipmentId.ToString(),
+            Creator = "Creator1",
+            Status = "cancelled"
+        };
+
+        _repositoryMock
+            .Setup(repo => repo.GetByIdAsync(shipmentId))
+            .ReturnsAsync(existingShipment);
+
+        _repositoryMock
+            .Setup(repo => repo.UpdateAsync(It.IsAny<Shipment>()))
+            .ReturnsAsync((Shipment s) => s);
+
+        // Act
+        var result = await _useCase.HandleAsync(input, CancellationToken.None);
+
+        // Assert
+        Assert.NotNull(result);
+        Assert.Null(result.Error);
+        Assert.Equal("cancelled", result.Status);
+        _repositoryMock.Verify(repo => repo.UpdateAsync(It.IsAny<Shipment>()), Times.Once);
+    }
+
+    /// <summary>
+    /// PUT with status = "delivered" on an in_transit shipment should succeed.
+    /// </summary>
+    [Fact]
+    public async Task HandleAsync_WithStatusDeliveredOnInTransitShipment_ShouldSucceed()
+    {
+        // Arrange
+        var shipmentId = Guid.NewGuid();
+        var existingShipment = new Shipment
+        {
+            Id = shipmentId,
+            PackageName = "Package",
+            Weight = 5m,
+            Dimensions = new Dimensions { Length = 10, Width = 10, Height = 10 },
+            ShippingCost = 100m,
+            DestinationAddress = "Address",
+            DateCreated = DateTime.UtcNow,
+            DateLastUpdated = DateTime.UtcNow,
+            Creator = "Creator1",
+            Status = "in_transit"
+        };
+
+        var input = new UpdateShipmentInput
+        {
+            Id = shipmentId.ToString(),
+            Creator = "Creator1",
+            Status = "delivered"
+        };
+
+        _repositoryMock
+            .Setup(repo => repo.GetByIdAsync(shipmentId))
+            .ReturnsAsync(existingShipment);
+
+        _repositoryMock
+            .Setup(repo => repo.UpdateAsync(It.IsAny<Shipment>()))
+            .ReturnsAsync((Shipment s) => s);
+
+        // Act
+        var result = await _useCase.HandleAsync(input, CancellationToken.None);
+
+        // Assert
+        Assert.NotNull(result);
+        Assert.Null(result.Error);
+        Assert.Equal("delivered", result.Status);
+        _repositoryMock.Verify(repo => repo.UpdateAsync(It.IsAny<Shipment>()), Times.Once);
+    }
+
+    /// <summary>
+    /// PUT with status = "delivered" on a pending shipment should return error 409 (invalid transition).
+    /// </summary>
+    [Fact]
+    public async Task HandleAsync_WithStatusDeliveredOnPendingShipment_ShouldReturnError409()
+    {
+        // Arrange
+        var shipmentId = Guid.NewGuid();
+        var existingShipment = new Shipment
+        {
+            Id = shipmentId,
+            PackageName = "Package",
+            Weight = 5m,
+            Dimensions = new Dimensions { Length = 10, Width = 10, Height = 10 },
+            ShippingCost = 100m,
+            DestinationAddress = "Address",
+            DateCreated = DateTime.UtcNow,
+            DateLastUpdated = DateTime.UtcNow,
+            Creator = "Creator1",
+            Status = "pending"
+        };
+
+        var input = new UpdateShipmentInput
+        {
+            Id = shipmentId.ToString(),
+            Creator = "Creator1",
+            Status = "delivered"
+        };
+
+        _repositoryMock
+            .Setup(repo => repo.GetByIdAsync(shipmentId))
+            .ReturnsAsync(existingShipment);
+
+        // Act
+        var result = await _useCase.HandleAsync(input, CancellationToken.None);
+
+        // Assert
+        Assert.NotNull(result);
+        Assert.NotNull(result.Error);
+        Assert.Equal("INVALID_STATUS_TRANSITION", result.Error.Code);
+        Assert.Equal(409, result.Error.CorrespondingStatusCode);
+        _repositoryMock.Verify(repo => repo.UpdateAsync(It.IsAny<Shipment>()), Times.Never);
+    }
+
+    /// <summary>
+    /// PUT with data fields on an in_transit shipment (without status change) should return error 409.
+    /// </summary>
+    [Fact]
+    public async Task HandleAsync_WithDataFieldsOnInTransitShipment_ShouldReturnError409()
+    {
+        // Arrange
+        var shipmentId = Guid.NewGuid();
+        var existingShipment = new Shipment
+        {
+            Id = shipmentId,
+            PackageName = "Package",
+            Weight = 5m,
+            Dimensions = new Dimensions { Length = 10, Width = 10, Height = 10 },
+            ShippingCost = 100m,
+            DestinationAddress = "Address",
+            DateCreated = DateTime.UtcNow,
+            DateLastUpdated = DateTime.UtcNow,
+            Creator = "Creator1",
+            Status = "in_transit"
+        };
+
+        var input = new UpdateShipmentInput
+        {
+            Id = shipmentId.ToString(),
+            Creator = "Creator1",
+            PackageName = "Updated Package"
+        };
+
+        _repositoryMock
+            .Setup(repo => repo.GetByIdAsync(shipmentId))
+            .ReturnsAsync(existingShipment);
+
+        // Act
+        var result = await _useCase.HandleAsync(input, CancellationToken.None);
+
+        // Assert
+        Assert.NotNull(result);
+        Assert.NotNull(result.Error);
+        Assert.Equal("SHIPMENT_NOT_UPDATABLE", result.Error.Code);
+        Assert.Equal(409, result.Error.CorrespondingStatusCode);
+        _repositoryMock.Verify(repo => repo.UpdateAsync(It.IsAny<Shipment>()), Times.Never);
+    }
+
+    /// <summary>
+    /// PUT with status = "in_transit" and data fields on a pending shipment should succeed (both allowed).
+    /// </summary>
+    [Fact]
+    public async Task HandleAsync_WithStatusAndDataFieldsOnPendingShipment_ShouldSucceed()
+    {
+        // Arrange
+        var shipmentId = Guid.NewGuid();
+        var existingShipment = new Shipment
+        {
+            Id = shipmentId,
+            PackageName = "Original Package",
+            Weight = 5m,
+            Dimensions = new Dimensions { Length = 10, Width = 10, Height = 10 },
+            ShippingCost = 100m,
+            DestinationAddress = "Address",
+            DateCreated = DateTime.UtcNow,
+            DateLastUpdated = DateTime.UtcNow,
+            Creator = "Creator1",
+            Status = "pending"
+        };
+
+        var input = new UpdateShipmentInput
+        {
+            Id = shipmentId.ToString(),
+            Creator = "Creator1",
+            PackageName = "Updated Package",
+            Status = "in_transit"
+        };
+
+        _repositoryMock
+            .Setup(repo => repo.GetByIdAsync(shipmentId))
+            .ReturnsAsync(existingShipment);
+
+        _repositoryMock
+            .Setup(repo => repo.UpdateAsync(It.IsAny<Shipment>()))
+            .ReturnsAsync((Shipment s) => s);
+
+        // Act
+        var result = await _useCase.HandleAsync(input, CancellationToken.None);
+
+        // Assert
+        Assert.NotNull(result);
+        Assert.Null(result.Error);
+        Assert.Equal("Updated Package", result.PackageName);
+        Assert.Equal("in_transit", result.Status);
+        _repositoryMock.Verify(repo => repo.UpdateAsync(It.IsAny<Shipment>()), Times.Once);
+    }
+
+    /// <summary>
+    /// PUT with status = "pending" on a delivered shipment should return error 409 (final state).
+    /// </summary>
+    [Fact]
+    public async Task HandleAsync_WithStatusPendingOnDeliveredShipment_ShouldReturnError409()
+    {
+        // Arrange
+        var shipmentId = Guid.NewGuid();
+        var existingShipment = new Shipment
+        {
+            Id = shipmentId,
+            PackageName = "Package",
+            Weight = 5m,
+            Dimensions = new Dimensions { Length = 10, Width = 10, Height = 10 },
+            ShippingCost = 100m,
+            DestinationAddress = "Address",
+            DateCreated = DateTime.UtcNow,
+            DateLastUpdated = DateTime.UtcNow,
+            Creator = "Creator1",
+            Status = "delivered"
+        };
+
+        var input = new UpdateShipmentInput
+        {
+            Id = shipmentId.ToString(),
+            Creator = "Creator1",
+            Status = "pending"
+        };
+
+        _repositoryMock
+            .Setup(repo => repo.GetByIdAsync(shipmentId))
+            .ReturnsAsync(existingShipment);
+
+        // Act
+        var result = await _useCase.HandleAsync(input, CancellationToken.None);
+
+        // Assert
+        Assert.NotNull(result);
+        Assert.NotNull(result.Error);
+        Assert.Equal("INVALID_STATUS_TRANSITION", result.Error.Code);
+        Assert.Equal(409, result.Error.CorrespondingStatusCode);
+        _repositoryMock.Verify(repo => repo.UpdateAsync(It.IsAny<Shipment>()), Times.Never);
+    }
 }
