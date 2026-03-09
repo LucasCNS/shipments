@@ -1,0 +1,53 @@
+services:
+  # PostgreSQL Database
+  db:
+    image: postgres:16-alpine
+    container_name: shipments-db
+    environment:
+      POSTGRES_USER: postgres
+      POSTGRES_PASSWORD: postgres
+      POSTGRES_DB: shipments
+      POSTGRES_INITDB_ARGS: "-c timezone=UTC"
+    ports:
+      - "5432:5432"
+    volumes:
+      - postgres_data:/var/lib/postgresql/data
+      - ./scripts/init-db.sql:/docker-entrypoint-initdb.d/init-db.sql
+    networks:
+      - shipments-network
+    healthcheck:
+      test: ["CMD-SHELL", "pg_isready -U postgres"]
+      interval: 10s
+      timeout: 5s
+      retries: 5
+
+  # API Service
+  api:
+    build:
+      context: .
+      dockerfile: Dockerfile
+    container_name: shipments-api
+    ports:
+      - "8080:8080"
+    environment:
+      ASPNETCORE_ENVIRONMENT: Development
+      ConnectionStrings__DefaultConnection: "Host=db;Port=5432;Database=shipments;Username=postgres;Password=postgres;"
+    depends_on:
+      db:
+        condition: service_healthy
+    networks:
+      - shipments-network
+    healthcheck:
+      test: ["CMD", "curl", "-f", "http://localhost:8080/health"]
+      interval: 30s
+      timeout: 3s
+      retries: 3
+      start_period: 10s
+
+volumes:
+  postgres_data:
+    driver: local
+
+networks:
+  shipments-network:
+    driver: bridge
