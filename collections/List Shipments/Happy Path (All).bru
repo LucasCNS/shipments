@@ -1,0 +1,21 @@
+meta {
+  name: List Shipments - Happy Path (All)
+  type: http
+  seq: 4
+}
+
+get {
+  url: {{baseUrl}}/v1/shipments
+  auth: none
+}
+
+headers {
+  Creator: {{creator}}
+}
+
+docs {
+  **Sucesso**: Lista todos os envios com paginação padrão
+  - Resposta esperada: 200 OK
+  - Retorna: total, offset, limit, results (array de envios)
+  - Paginação padrão: limit=10, offset=0
+}

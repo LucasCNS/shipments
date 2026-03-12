@@ -1,0 +1,20 @@
+meta {
+  name: Get Shipment by ID - Invalid UUID
+  type: http
+  seq: 9
+}
+
+get {
+  url: {{baseUrl}}/v1/shipments/invalid-uuid-format
+  auth: none
+}
+
+headers {
+  Creator: {{creator}}
+}
+
+docs {
+  **Erro**: Tenta obter com formato UUID inválido
+  - Resposta esperada: 400 Bad Request
+  - Erro: ID deve ser um UUID válido
+}

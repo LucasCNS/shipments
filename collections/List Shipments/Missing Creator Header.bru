@@ -1,0 +1,16 @@
+meta {
+  name: List Shipments - Missing Creator Header
+  type: http
+  seq: 7
+}
+
+get {
+  url: {{baseUrl}}/v1/shipments
+  auth: none
+}
+
+docs {
+  **Erro**: Tenta listar sem o header Creator obrigatório
+  - Resposta esperada: 400 Bad Request
+  - Erro: Creator header é obrigatório
+}

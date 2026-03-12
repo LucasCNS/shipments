@@ -1,0 +1,36 @@
+meta {
+  name: Update Shipment - Sad Path (Invalid Data)
+  type: http
+  seq: 12
+}
+
+put {
+  url: {{baseUrl}}/v1/shipments/{{shipmentId}}
+  body: json
+  auth: none
+}
+
+headers {
+  Creator: {{creator}}
+  Content-Type: application/json
+}
+
+body:json {
+  {
+    "packageName": "Invalid@#$",
+    "weight": -5,
+    "dimensions": {
+      "length": -10,
+      "width": 0,
+      "height": 2
+    },
+    "shippingCost": -1500,
+    "destinationAddress": ""
+  }
+}
+
+docs {
+  **Erro**: Tenta atualizar com dados inválidos
+  - Resposta esperada: 400 Bad Request
+  - Erros esperados: packageName contém caracteres especiais, weight <= 0, etc
+}

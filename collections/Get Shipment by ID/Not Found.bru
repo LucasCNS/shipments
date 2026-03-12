@@ -1,0 +1,21 @@
+meta {
+  name: Get Shipment by ID - Not Found
+  type: http
+  seq: 10
+}
+
+get {
+  url: {{baseUrl}}/v1/shipments/00000000-0000-0000-0000-18d898226202
+  body: none
+  auth: none
+}
+
+headers {
+  Creator: {{creator}}
+}
+
+docs {
+  **Erro**: Tenta obter um envio que não existe
+  - Resposta esperada: 404 Not Found
+  - Erro: Shipment not found
+}
