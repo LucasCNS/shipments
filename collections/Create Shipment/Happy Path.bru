@@ -1,0 +1,36 @@
+meta {
+  name: Create Shipment - Happy Path
+  type: http
+  seq: 1
+}
+
+post {
+  url: {{baseUrl}}/v1/shipments
+  body: json
+  auth: none
+}
+
+headers {
+  Creator: {{creator}}
+  Content-Type: application/json
+}
+
+body:json {
+  {
+    "packageName": "Smartphone Samsung",
+    "weight": 0.5,
+    "dimensions": {
+      "length": 15,
+      "width": 8,
+      "height": 2
+    },
+    "shippingCost": 1500,
+    "destinationAddress": "Av. Corrientes 1234, CABA"
+  }
+}
+
+docs {
+  **Sucesso**: Cria um novo envio com dados válidos
+  - Resposta esperada: 201 Created
+  - Retorna os dados do envio criado com uuid, datas e status "pending"
+}

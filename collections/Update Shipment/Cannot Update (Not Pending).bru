@@ -1,0 +1,37 @@
+meta {
+  name: Update Shipment - Cannot Update (Not Pending)
+  type: http
+  seq: 13
+}
+
+put {
+  url: {{baseUrl}}/v1/shipments/{{shipmentId}}
+  body: json
+  auth: none
+}
+
+headers {
+  Creator: {{creator}}
+  Content-Type: application/json
+}
+
+body:json {
+  {
+    "packageName": "Smartphone Samsung Atualizado",
+    "weight": 0.6,
+    "dimensions": {
+      "length": 16,
+      "width": 9,
+      "height": 2.5
+    },
+    "shippingCost": 1600,
+    "destinationAddress": "Av. Rivadavia 5678, CABA"
+  }
+}
+
+docs {
+  **Erro**: Tenta atualizar um envio que não está em status "pending"
+  - Resposta esperada: 409 Conflict
+  - Erro: Shipment cannot be updated (not in pending status)
+  - Nota: Use um UUID de um envio com status diferente de "pending"
+}

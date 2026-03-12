@@ -1,0 +1,20 @@
+meta {
+  name: List Shipments - Sad Path (Invalid Params)
+  type: http
+  seq: 6
+}
+
+get {
+  url: {{baseUrl}}/v1/shipments?status=invalid_status&limit=101&offset=-1
+  auth: none
+}
+
+headers {
+  Creator: {{creator}}
+}
+
+docs {
+  **Erro**: Tenta listar com parâmetros inválidos
+  - Resposta esperada: 400 Bad Request
+  - Erros esperados: status inválido, limit > 100, offset negativo
+}

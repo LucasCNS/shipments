@@ -1,0 +1,21 @@
+meta {
+  name: Get Shipment by ID - Happy Path
+  type: http
+  seq: 8
+}
+
+get {
+  url: {{baseUrl}}/v1/shipments/{{shipmentId}}
+  auth: none
+}
+
+headers {
+  Creator: {{creator}}
+}
+
+docs {
+  **Sucesso**: Obtém um envio específico pelo ID (UUID válido)
+  - Resposta esperada: 200 OK
+  - Retorna os dados completos do envio
+  - Usa a variável {{shipmentId}} do ambiente
+}

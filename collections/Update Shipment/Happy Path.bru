@@ -1,0 +1,37 @@
+meta {
+  name: Update Shipment - Happy Path
+  type: http
+  seq: 11
+}
+
+put {
+  url: {{baseUrl}}/v1/shipments/{{shipmentId}}
+  body: json
+  auth: none
+}
+
+headers {
+  Creator: {{creator}}
+  Content-Type: application/json
+}
+
+body:json {
+  {
+    "packageName": "Smartphone Samsung Atualizado",
+    "weight": 0.6,
+    "dimensions": {
+      "length": 16,
+      "width": 9,
+      "height": 2.5
+    },
+    "shippingCost": 1600,
+    "destinationAddress": "Av. Rivadavia 5678, CABA"
+  }
+}
+
+docs {
+  **Sucesso**: Atualiza um envio em status "pending"
+  - Resposta esperada: 200 OK
+  - Retorna os dados atualizados com date_last_updated renovado
+  - Nota: Só é possível atualizar envios com status "pending"
+}

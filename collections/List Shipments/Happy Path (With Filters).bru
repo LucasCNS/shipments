@@ -1,0 +1,21 @@
+meta {
+  name: List Shipments - Happy Path (With Filters)
+  type: http
+  seq: 5
+}
+
+get {
+  url: {{baseUrl}}/v1/shipments?status=pending&limit=5&offset=0
+  auth: none
+}
+
+headers {
+  Creator: {{creator}}
+}
+
+docs {
+  **Sucesso**: Lista envios com filtro de status e paginação customizada
+  - Resposta esperada: 200 OK
+  - Filtro: status=pending
+  - Paginação: limit=5, offset=0
+}
