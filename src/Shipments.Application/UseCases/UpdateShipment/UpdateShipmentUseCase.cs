@@ -3,7 +3,6 @@ using System.Threading;
 using System.Threading.Tasks;
 using Microsoft.Extensions.Logging;
 using Shipments.Application.Repositories;
-using Shipments.Application.StateTransitions;
 using Shipments.Application.Validators;
 using Shipments.Domain.Models;
 
@@ -86,22 +85,6 @@ public class UpdateShipmentUseCase : IUpdateShipmentUseCase
             };
         }
 
-        // Validate status transition if status is provided
-        if (!string.IsNullOrWhiteSpace(input.Status))
-        {
-            var transitionError = ShipmentStateTransitionValidator.Validate(existingShipment.Status, input.Status);
-            if (transitionError != null)
-            {
-                _logger.LogWarning("Invalid status transition for shipment {ShipmentId}: {CurrentStatus} → {NewStatus}",
-                    shipmentId, existingShipment.Status, input.Status);
-
-                return new UpdateShipmentOutput
-                {
-                    Error = transitionError
-                };
-            }
-        }
-
         // Check if data fields are being updated
         var hasDataFields = !string.IsNullOrWhiteSpace(input.PackageName) ||
                            input.Weight.HasValue ||
@@ -120,24 +103,6 @@ public class UpdateShipmentUseCase : IUpdateShipmentUseCase
                 Code = "SHIPMENT_NOT_UPDATABLE",
                 Message = $"Shipment with status '{existingShipment.Status}' cannot have its data fields updated. Only shipments with 'pending' status can have data fields updated.",
                 CorrespondingStatusCode = 409
-            };
-
-            return new UpdateShipmentOutput
-            {
-                Error = error
-            };
-        }
-
-        // Check if at least one field is provided for update
-        var hasFieldsToUpdate = hasDataFields || !string.IsNullOrWhiteSpace(input.Status);
-
-        if (!hasFieldsToUpdate)
-        {
-            var error = new Domain.Results.Error
-            {
-                Code = "NO_FIELDS_TO_UPDATE",
-                Message = "At least one field must be provided for update.",
-                CorrespondingStatusCode = 400
             };
 
             return new UpdateShipmentOutput
@@ -170,14 +135,6 @@ public class UpdateShipmentUseCase : IUpdateShipmentUseCase
         if (!string.IsNullOrWhiteSpace(input.DestinationAddress))
         {
             existingShipment.DestinationAddress = input.DestinationAddress;
-        }
-
-        if (!string.IsNullOrWhiteSpace(input.Status))
-        {
-            var oldStatus = existingShipment.Status;
-            existingShipment.Status = input.Status;
-            _logger.LogInformation("Status transition for shipment {ShipmentId}: {OldStatus} → {NewStatus}",
-                shipmentId, oldStatus, input.Status);
         }
 
         // Update the last modified date

@@ -138,16 +138,17 @@ public class ShipmentsController : ControllerBase
     }
 
     /// <summary>
-    /// Updates an existing shipment.
+    /// Updates an existing shipment's data fields.
+    /// Status updates are NOT supported through this endpoint. Only shipments with 'pending' status can have their data fields updated.
     /// </summary>
     /// <param name="useCase">The update shipment use case.</param>
     /// <param name="id">The shipment ID to update.</param>
     /// <param name="creator">Required header to identify the request creator.</param>
-    /// <param name="input">The shipment data to update.</param>
+    /// <param name="input">The shipment data to update (PackageName, Weight, Dimensions, ShippingCost, DestinationAddress).</param>
     /// <param name="cancellationToken">Cancellation token for the operation.</param>
     /// <returns>The updated shipment with status 200 OK.</returns>
     /// <response code="200">Shipment updated successfully.</response>
-    /// <response code="400">Invalid input data or missing Creator header.</response>
+    /// <response code="400">Invalid input data, missing Creator header, or no fields provided for update.</response>
     /// <response code="404">Shipment not found.</response>
     /// <response code="409">Shipment cannot be updated (e.g., not in pending status).</response>
     [HttpPut("{id}")]

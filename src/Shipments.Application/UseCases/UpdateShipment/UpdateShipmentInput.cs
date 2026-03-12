@@ -41,9 +41,4 @@ public class UpdateShipmentInput
     /// Name of the user updating the shipment (extracted from header).
     /// </summary>
     public string? Creator { get; set; }
-
-    /// <summary>
-    /// New status for the shipment (optional). Valid values: pending, in_transit, delivered, cancelled.
-    /// </summary>
-    public string? Status { get; set; }
 }
