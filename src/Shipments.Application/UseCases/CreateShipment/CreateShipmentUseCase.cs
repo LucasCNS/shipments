@@ -3,6 +3,7 @@ using System.Threading;
 using System.Threading.Tasks;
 using Microsoft.Extensions.Logging;
 using Shipments.Application.Repositories;
+using Shipments.Application.Results;
 using Shipments.Application.Validators;
 using Shipments.Domain.Models;
 
@@ -32,8 +33,8 @@ public class CreateShipmentUseCase : ICreateShipmentUseCase
     /// </summary>
     /// <param name="input">The input data for creating a shipment.</param>
     /// <param name="cancellationToken">Cancellation token for the operation.</param>
-    /// <returns>The shipment creation output.</returns>
-    public async Task<CreateShipmentOutput> HandleAsync(CreateShipmentInput input, CancellationToken cancellationToken)
+    /// <returns>A result containing the shipment creation output or error information.</returns>
+    public async Task<Result<CreateShipmentOutput>> HandleAsync(CreateShipmentInput input, CancellationToken cancellationToken)
     {
         // Validate input
         var validationError = CreateShipmentValidator.Validate(input);
@@ -42,10 +43,7 @@ public class CreateShipmentUseCase : ICreateShipmentUseCase
             _logger.LogWarning("Validation error when creating shipment: {Code} - {Message}", 
                 validationError.Code, validationError.Message);
 
-            return new CreateShipmentOutput
-            {
-                Error = validationError
-            };
+            return Result<CreateShipmentOutput>.Failure(validationError);
         }
 
         // Create the shipment entity
@@ -69,7 +67,7 @@ public class CreateShipmentUseCase : ICreateShipmentUseCase
         _logger.LogInformation("Shipment created successfully with ID {ShipmentId}", createdShipment.Id);
 
         // Return output
-        return new CreateShipmentOutput
+        var output = new CreateShipmentOutput
         {
             Id = createdShipment.Id,
             PackageName = createdShipment.PackageName,
@@ -80,8 +78,9 @@ public class CreateShipmentUseCase : ICreateShipmentUseCase
             DateCreated = createdShipment.DateCreated,
             DateLastUpdated = createdShipment.DateLastUpdated,
             Creator = createdShipment.Creator,
-            Status = createdShipment.Status,
-            Error = null
+            Status = createdShipment.Status
         };
+
+        return Result<CreateShipmentOutput>.Success(output);
     }
 }

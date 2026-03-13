@@ -4,6 +4,7 @@ using System.Threading.Tasks;
 using Asp.Versioning;
 using Microsoft.AspNetCore.Http;
 using Microsoft.AspNetCore.Mvc;
+using Shipments.Application.Results;
 using Shipments.Application.UseCases.CreateShipment;
 using Shipments.Application.UseCases.GetShipmentById;
 using Shipments.Application.UseCases.ListShipments;
@@ -43,16 +44,16 @@ public class ShipmentsController : ControllerBase
         input.Creator = creator;
 
         // Execute use case
-        var output = await useCase.HandleAsync(input, cancellationToken);
+        var result = await useCase.HandleAsync(input, cancellationToken);
 
-        // Check if there was a validation error
-        if (output.Error != null)
+        // Check if the operation failed
+        if (!result.IsSuccess)
         {
-            return HandleUseCaseError(output.Error);
+            return HandleUseCaseError(result.Error!);
         }
 
         // Return 201 Created
-        return StatusCode(StatusCodes.Status201Created, output);
+        return StatusCode(StatusCodes.Status201Created, result.Value);
     }
 
     /// <summary>
