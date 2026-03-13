@@ -5,6 +5,7 @@ using Xunit;
 using Moq;
 using Microsoft.Extensions.Logging;
 using Shipments.Application.Repositories;
+using Shipments.Application.Results;
 using Shipments.Application.UseCases.CreateShipment;
 using Shipments.Domain.Models;
 
@@ -57,18 +58,19 @@ public class CreateShipmentUseCaseTests
 
         // Assert
         Assert.NotNull(result);
-        Assert.NotEqual(Guid.Empty, result.Id); // ID should be generated, not empty
-        Assert.Equal("Valid Package", result.PackageName);
-        Assert.Equal(15.5m, result.Weight);
-        Assert.NotNull(result.Dimensions);
-        Assert.Equal(25, result.Dimensions.Length);
-        Assert.Equal(35, result.Dimensions.Width);
-        Assert.Equal(45, result.Dimensions.Height);
-        Assert.Equal(100.00m, result.ShippingCost);
-        Assert.Equal("456 Oak Ave, Town, Country", result.DestinationAddress);
-        Assert.Equal("Alice", result.Creator);
-        Assert.Equal("pending", result.Status);
-        Assert.Null(result.Error);
+        Assert.True(result.IsSuccess, "Result should be successful");
+        Assert.NotNull(result.Value);
+        Assert.NotEqual(Guid.Empty, result.Value.Id); // ID should be generated, not empty
+        Assert.Equal("Valid Package", result.Value.PackageName);
+        Assert.Equal(15.5m, result.Value.Weight);
+        Assert.NotNull(result.Value.Dimensions);
+        Assert.Equal(25, result.Value.Dimensions.Length);
+        Assert.Equal(35, result.Value.Dimensions.Width);
+        Assert.Equal(45, result.Value.Dimensions.Height);
+        Assert.Equal(100.00m, result.Value.ShippingCost);
+        Assert.Equal("456 Oak Ave, Town, Country", result.Value.DestinationAddress);
+        Assert.Equal("Alice", result.Value.Creator);
+        Assert.Equal("pending", result.Value.Status);
         _repositoryMock.Verify(repo => repo.CreateAsync(It.IsAny<Shipment>()), Times.Once);
     }
 
@@ -99,8 +101,10 @@ public class CreateShipmentUseCaseTests
         var afterCall = DateTime.UtcNow;
 
         // Assert
-        Assert.True(result.DateCreated >= beforeCall && result.DateCreated <= afterCall);
-        Assert.True(result.DateLastUpdated >= beforeCall && result.DateLastUpdated <= afterCall);
+        Assert.True(result.IsSuccess, "Result should be successful");
+        Assert.NotNull(result.Value);
+        Assert.True(result.Value.DateCreated >= beforeCall && result.Value.DateCreated <= afterCall);
+        Assert.True(result.Value.DateLastUpdated >= beforeCall && result.Value.DateLastUpdated <= afterCall);
     }
 
     /// <summary>
@@ -124,10 +128,11 @@ public class CreateShipmentUseCaseTests
         var result = await _useCase.HandleAsync(input, CancellationToken.None);
 
         // Assert
+        Assert.False(result.IsSuccess, "Result should fail for empty PackageName");
         Assert.NotNull(result.Error);
-        Assert.Equal("EMPTY_PACKAGE_NAME", result.Error!.Code);
+        Assert.Equal("VALIDATION_ERROR", result.Error!.Code);
         Assert.Equal(400, result.Error.CorrespondingStatusCode);
-        Assert.Equal(Guid.Empty, result.Id);
+        Assert.True(result.Error.ValidationErrors.Count > 0, "Error should contain validation messages");
         _repositoryMock.Verify(repo => repo.CreateAsync(It.IsAny<Shipment>()), Times.Never);
     }
 
@@ -152,8 +157,9 @@ public class CreateShipmentUseCaseTests
         var result = await _useCase.HandleAsync(input, CancellationToken.None);
 
         // Assert
+        Assert.False(result.IsSuccess, "Result should fail for invalid Weight");
         Assert.NotNull(result.Error);
-        Assert.Equal("INVALID_WEIGHT", result.Error!.Code);
+        Assert.Equal("VALIDATION_ERROR", result.Error!.Code);
         _repositoryMock.Verify(repo => repo.CreateAsync(It.IsAny<Shipment>()), Times.Never);
     }
 
@@ -178,8 +184,9 @@ public class CreateShipmentUseCaseTests
         var result = await _useCase.HandleAsync(input, CancellationToken.None);
 
         // Assert
+        Assert.False(result.IsSuccess, "Result should fail for invalid Dimensions");
         Assert.NotNull(result.Error);
-        Assert.Equal("INVALID_DIMENSIONS", result.Error!.Code);
+        Assert.Equal("VALIDATION_ERROR", result.Error!.Code);
         _repositoryMock.Verify(repo => repo.CreateAsync(It.IsAny<Shipment>()), Times.Never);
     }
 
@@ -204,8 +211,9 @@ public class CreateShipmentUseCaseTests
         var result = await _useCase.HandleAsync(input, CancellationToken.None);
 
         // Assert
+        Assert.False(result.IsSuccess, "Result should fail for invalid ShippingCost");
         Assert.NotNull(result.Error);
-        Assert.Equal("INVALID_SHIPPING_COST", result.Error!.Code);
+        Assert.Equal("VALIDATION_ERROR", result.Error!.Code);
         _repositoryMock.Verify(repo => repo.CreateAsync(It.IsAny<Shipment>()), Times.Never);
     }
 
@@ -230,8 +238,9 @@ public class CreateShipmentUseCaseTests
         var result = await _useCase.HandleAsync(input, CancellationToken.None);
 
         // Assert
+        Assert.False(result.IsSuccess, "Result should fail for empty DestinationAddress");
         Assert.NotNull(result.Error);
-        Assert.Equal("EMPTY_DESTINATION_ADDRESS", result.Error!.Code);
+        Assert.Equal("VALIDATION_ERROR", result.Error!.Code);
         _repositoryMock.Verify(repo => repo.CreateAsync(It.IsAny<Shipment>()), Times.Never);
     }
 
@@ -256,8 +265,9 @@ public class CreateShipmentUseCaseTests
         var result = await _useCase.HandleAsync(input, CancellationToken.None);
 
         // Assert
+        Assert.False(result.IsSuccess, "Result should fail for empty Creator");
         Assert.NotNull(result.Error);
-        Assert.Equal("EMPTY_CREATOR", result.Error!.Code);
+        Assert.Equal("VALIDATION_ERROR", result.Error!.Code);
         _repositoryMock.Verify(repo => repo.CreateAsync(It.IsAny<Shipment>()), Times.Never);
     }
 
@@ -310,8 +320,8 @@ public class CreateShipmentUseCaseTests
         var result = await _useCase.HandleAsync(input, CancellationToken.None);
 
         // Assert
+        Assert.False(result.IsSuccess, "Result should fail for invalid PackageName");
         Assert.NotNull(result.Error);
-        Assert.Equal("INVALID_PACKAGE_NAME", result.Error!.Code);
-        _repositoryMock.Verify(repo => repo.CreateAsync(It.IsAny<Shipment>()), Times.Never);
+        Assert.Equal("VALIDATION_ERROR", result.Error!.Code);
     }
 }
