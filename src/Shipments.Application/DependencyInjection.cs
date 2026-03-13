@@ -3,6 +3,7 @@ using Shipments.Application.UseCases.CreateShipment;
 using Shipments.Application.UseCases.GetShipmentById;
 using Shipments.Application.UseCases.ListShipments;
 using Shipments.Application.UseCases.UpdateShipment;
+using Shipments.Application.UseCases.UpdateShipmentStatus;
 
 namespace Shipments.Application;
 
@@ -22,6 +23,7 @@ public static class DependencyInjection
         services.AddScoped<IGetShipmentByIdUseCase, GetShipmentByIdUseCase>();
         services.AddScoped<IListShipmentsUseCase, ListShipmentsUseCase>();
         services.AddScoped<IUpdateShipmentUseCase, UpdateShipmentUseCase>();
+        services.AddScoped<IUpdateShipmentStatusUseCase, UpdateShipmentStatusUseCase>();
         return services;
     }
 }

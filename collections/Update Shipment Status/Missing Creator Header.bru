@@ -1,0 +1,28 @@
+meta {
+  name: Update Shipment Status - Missing Creator Header
+  type: http
+  seq: 7
+}
+
+patch {
+  url: {{baseUrl}}/v1/shipments/{{shipmentId}}/status
+  body: json
+  auth: none
+}
+
+headers {
+  Content-Type: application/json
+}
+
+body:json {
+  {
+    "status": "in_transit"
+  }
+}
+
+docs {
+  **Erro**: Tenta atualizar sem informar o header "Creator"
+  - Resposta esperada: 400 Bad Request
+  - Erro: Header "Creator" é obrigatório
+  - O header Creator é necessário para auditoria de dados
+}
