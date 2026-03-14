@@ -4,22 +4,22 @@ FROM mcr.microsoft.com/dotnet/sdk:8.0 AS build
 WORKDIR /src
 
 # Copy project files
-COPY ["src/Shipments.Domain/Shipments.Domain.csproj", "src/Shipments.Domain/"]
-COPY ["src/Shipments.Application/Shipments.Application.csproj", "src/Shipments.Application/"]
-COPY ["src/Shipments.Infrastructure/Shipments.Infrastructure.csproj", "src/Shipments.Infrastructure/"]
-COPY ["src/Shipments.Api/Shipments.Api.csproj", "src/Shipments.Api/"]
+COPY ["src/shipments-api/Shipments.Domain/Shipments.Domain.csproj", "src/shipments-api/Shipments.Domain/"]
+COPY ["src/shipments-api/Shipments.Application/Shipments.Application.csproj", "src/shipments-api/Shipments.Application/"]
+COPY ["src/shipments-api/Shipments.Infrastructure/Shipments.Infrastructure.csproj", "src/shipments-api/Shipments.Infrastructure/"]
+COPY ["src/shipments-api/Shipments.Api/Shipments.Api.csproj", "src/shipments-api/Shipments.Api/"]
 
 # Restore dependencies
-RUN dotnet restore "src/Shipments.Domain/Shipments.Domain.csproj"
-RUN dotnet restore "src/Shipments.Application/Shipments.Application.csproj"
-RUN dotnet restore "src/Shipments.Infrastructure/Shipments.Infrastructure.csproj"
-RUN dotnet restore "src/Shipments.Api/Shipments.Api.csproj"
+RUN dotnet restore "src/shipments-api/Shipments.Domain/Shipments.Domain.csproj"
+RUN dotnet restore "src/shipments-api/Shipments.Application/Shipments.Application.csproj"
+RUN dotnet restore "src/shipments-api/Shipments.Infrastructure/Shipments.Infrastructure.csproj"
+RUN dotnet restore "src/shipments-api/Shipments.Api/Shipments.Api.csproj"
 
 # Copy the rest of the source code
 COPY . .
 
 # Build the application
-WORKDIR "/src/src/Shipments.Api"
+WORKDIR "/src/src/shipments-api/Shipments.Api"
 RUN dotnet build "Shipments.Api.csproj" -c Release -o /app/build
 
 # Publish the application

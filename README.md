@@ -368,7 +368,7 @@ dotnet run
 ```
 
 **Via Visual Studio:**
-1. Abra src/Shipments.sln
+1. Abra src/shipments-api/Shipments.sln
 2. Define Shipments.Api como projeto de inicialização
 3. Pressione F5 ou clique em "Run"
 
@@ -494,53 +494,54 @@ shipments/
 │   └── test-list-shipments-guide.md  # Guia de testes
 │
 ├── src/
-│   ├── Shipments.sln                 # Solution .NET
-│   │
-│   ├── Shipments.Api/                # APRESENTAÇÃO
-│   │   ├── Controllers/
-│   │   │   └── V1/
-│   │   │       └── ShipmentsController.cs
-│   │   ├── Program.cs
-│   │   ├── Shipments.Api.csproj
-│   │   ├── appsettings.json
-│   │   ├── appsettings.Development.json
-│   │   └── Shipments.Api.http
-│   │
-│   ├── Shipments.Application/        # APLICAÇÃO
-│   │   ├── UseCases/
-│   │   │   ├── CreateShipment/
-│   │   │   ├── GetShipmentById/
-│   │   │   ├── ListShipments/
-│   │   │   └── UpdateShipment/
-│   │   ├── Validators/
-│   │   │   ├── CreateShipmentValidator.cs
-│   │   │   ├── GetShipmentByIdValidator.cs
-│   │   │   ├── ListShipmentsValidator.cs
-│   │   │   └── UpdateShipmentValidator.cs
-│   │   ├── Repositories/
-│   │   │   └── IShipmentRepository.cs
-│   │   ├── DependencyInjection.cs
-│   │   └── Shipments.Application.csproj
-│   │
-│   ├── Shipments.Domain/             # DOMÍNIO
-│   │   ├── Models/
-│   │   │   ├── Shipment.cs
-│   │   │   └── Dimensions.cs
-│   │   ├── Results/
-│   │   │   └── Error.cs
-│   │   └── Shipments.Domain.csproj
-│   │
-│   ├── Shipments.Infrastructure/     # INFRAESTRUTURA
-│   │   ├── Persistence/
-│   │   │   └── ShipmentInMemoryRepository.cs
-│   │   ├── DependencyInjection.cs
-│   │   └── Shipments.Infrastructure.csproj
-│   │
-│   └── Shipments.UnitTests/          # TESTES
-│       ├── Application/
-│       │   ├── UseCases/
-│       │   └── Validators/
-│       └── Shipments.UnitTests.csproj
+│   ├── shipments-api/                # API de Shipments
+│   │   ├── Shipments.sln             # Solution .NET
+│   │   │
+│   │   ├── Shipments.Api/            # APRESENTAÇÃO
+│   │   │   ├── Controllers/
+│   │   │   │   └── V1/
+│   │   │   │       └── ShipmentsController.cs
+│   │   │   ├── Program.cs
+│   │   │   ├── Shipments.Api.csproj
+│   │   │   ├── appsettings.json
+│   │   │   ├── appsettings.Development.json
+│   │   │   └── Shipments.Api.http
+│   │   │
+│   │   ├── Shipments.Application/    # APLICAÇÃO
+│   │   │   ├── UseCases/
+│   │   │   │   ├── CreateShipment/
+│   │   │   │   ├── GetShipmentById/
+│   │   │   │   ├── ListShipments/
+│   │   │   │   └── UpdateShipment/
+│   │   │   ├── Validators/
+│   │   │   │   ├── CreateShipmentValidator.cs
+│   │   │   │   ├── GetShipmentByIdValidator.cs
+│   │   │   │   ├── ListShipmentsValidator.cs
+│   │   │   │   └── UpdateShipmentValidator.cs
+│   │   │   ├── Repositories/
+│   │   │   │   └── IShipmentRepository.cs
+│   │   │   ├── DependencyInjection.cs
+│   │   │   └── Shipments.Application.csproj
+│   │   │
+│   │   ├── Shipments.Domain/         # DOMÍNIO
+│   │   │   ├── Models/
+│   │   │   │   ├── Shipment.cs
+│   │   │   │   └── Dimensions.cs
+│   │   │   ├── Results/
+│   │   │   │   └── Error.cs
+│   │   │   └── Shipments.Domain.csproj
+│   │   │
+│   │   ├── Shipments.Infrastructure/ # INFRAESTRUTURA
+│   │   │   ├── Persistence/
+│   │   │   │   └── ShipmentInMemoryRepository.cs
+│   │   │   ├── DependencyInjection.cs
+│   │   │   └── Shipments.Infrastructure.csproj
+│   │   │
+│   │   └── Shipments.UnitTests/      # TESTES
+│   │       ├── Application/
+│   │       │   ├── UseCases/
+│   │       │   └── Validators/
+│   │       └── Shipments.UnitTests.csproj
 │
 ├── curl-tests-list-shipments.sh      # Script de teste cURL
 ├── test-list-shipments.ps1           # Script PowerShell
