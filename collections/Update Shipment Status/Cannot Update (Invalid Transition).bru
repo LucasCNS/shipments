@@ -1,0 +1,34 @@
+meta {
+  name: Update Shipment Status - Cannot Update (Invalid Transition)
+  type: http
+  seq: 5
+}
+
+patch {
+  url: {{baseUrl}}/v1/shipments/{{shipmentId}}/status
+  body: json
+  auth: none
+}
+
+headers {
+  Creator: {{creator}}
+  Content-Type: application/json
+}
+
+body:json {
+  {
+    "status": "pending"
+  }
+}
+
+docs {
+  **Erro**: Tenta fazer transição de estado inválida
+  - Resposta esperada: 409 Conflict
+  - Erro: Transição não permitida (ex: in_transit → pending)
+  - Transições válidas:
+    - pending → {in_transit, cancelled}
+    - in_transit → {delivered, cancelled}
+    - delivered → {} (final)
+    - cancelled → {} (final)
+  - Pré-requisito: Shipment deve estar em estado "in_transit"
+}

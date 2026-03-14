@@ -1,0 +1,29 @@
+meta {
+  name: Update Shipment Status - Invalid UUID
+  type: http
+  seq: 6
+}
+
+patch {
+  url: {{baseUrl}}/v1/shipments/invalid-uuid-format/status
+  body: json
+  auth: none
+}
+
+headers {
+  Creator: {{creator}}
+  Content-Type: application/json
+}
+
+body:json {
+  {
+    "status": "in_transit"
+  }
+}
+
+docs {
+  **Erro**: Tenta atualizar com formato UUID inválido
+  - Resposta esperada: 400 Bad Request
+  - Erro: ID do shipment deve ser um UUID válido
+  - Formato esperado: xxxxxxxx-xxxx-xxxx-xxxx-xxxxxxxxxxxx
+}

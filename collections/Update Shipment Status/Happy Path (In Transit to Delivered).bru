@@ -1,0 +1,31 @@
+meta {
+  name: Update Shipment Status - Happy Path (In Transit to Delivered)
+  type: http
+  seq: 3
+}
+
+patch {
+  url: {{baseUrl}}/v1/shipments/{{shipmentId}}/status
+  body: json
+  auth: none
+}
+
+headers {
+  Creator: {{creator}}
+  Content-Type: application/json
+}
+
+body:json {
+  {
+    "status": "delivered"
+  }
+}
+
+docs {
+  **Sucesso**: Atualiza status de "in_transit" para "delivered"
+  - Resposta esperada: 200 OK
+  - Retorna os dados completos do shipment com status atualizado
+  - Verificar que dateLastUpdated foi atualizado
+  - Transição válida: in_transit → delivered
+  - Pré-requisito: Shipment deve estar com status "in_transit"
+}

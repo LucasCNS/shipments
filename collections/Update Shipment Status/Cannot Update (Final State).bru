@@ -1,0 +1,30 @@
+meta {
+  name: Update Shipment Status - Cannot Update (Final State)
+  type: http
+  seq: 4
+}
+
+patch {
+  url: {{baseUrl}}/v1/shipments/{{shipmentId}}/status
+  body: json
+  auth: none
+}
+
+headers {
+  Creator: {{creator}}
+  Content-Type: application/json
+}
+
+body:json {
+  {
+    "status": "in_transit"
+  }
+}
+
+docs {
+  **Erro**: Tenta atualizar shipment que já está em estado final (delivered/cancelled)
+  - Resposta esperada: 409 Conflict
+  - Erro: Shipment em estado "delivered" ou "cancelled" não pode ser alterado
+  - Estados finais são imutáveis
+  - Pré-requisito: Usar um shipmentId que está em estado "delivered" ou "cancelled"
+}

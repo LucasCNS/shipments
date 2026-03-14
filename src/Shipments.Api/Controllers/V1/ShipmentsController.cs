@@ -9,6 +9,7 @@ using Shipments.Application.UseCases.CreateShipment;
 using Shipments.Application.UseCases.GetShipmentById;
 using Shipments.Application.UseCases.ListShipments;
 using Shipments.Application.UseCases.UpdateShipment;
+using Shipments.Application.UseCases.UpdateShipmentStatus;
 
 namespace Shipments.Api.Controllers.V1;
 
@@ -179,6 +180,49 @@ public class ShipmentsController : ControllerBase
 
         // Return 200 OK
         return Ok(output);
+    }
+
+    /// <summary>
+    /// Updates the status of an existing shipment.
+    /// Allows status transitions following the shipment state machine rules.
+    /// </summary>
+    /// <param name="useCase">The update shipment status use case.</param>
+    /// <param name="id">The shipment ID to update status for.</param>
+    /// <param name="creator">Required header to identify the request creator.</param>
+    /// <param name="input">The new status for the shipment.</param>
+    /// <param name="cancellationToken">Cancellation token for the operation.</param>
+    /// <returns>The updated shipment with status 200 OK.</returns>
+    /// <response code="200">Shipment status updated successfully.</response>
+    /// <response code="400">Invalid input data, missing Creator header, or invalid status value.</response>
+    /// <response code="404">Shipment not found.</response>
+    /// <response code="409">Invalid status transition (e.g., from a final state or invalid transition).</response>
+    [HttpPatch("{id}/status")]
+    [ProducesResponseType(StatusCodes.Status200OK)]
+    [ProducesResponseType(StatusCodes.Status400BadRequest)]
+    [ProducesResponseType(StatusCodes.Status404NotFound)]
+    [ProducesResponseType(StatusCodes.Status409Conflict)]
+    public async Task<IActionResult> UpdateStatusAsync(
+        [FromServices] IUpdateShipmentStatusUseCase useCase,
+        [FromRoute] string id,
+        [FromHeader][Required] string creator,
+        [FromBody] UpdateShipmentStatusInput input,
+        CancellationToken cancellationToken)
+    {
+        // Assign ID and Creator to input
+        input.Id = id;
+        input.Creator = creator;
+
+        // Execute use case
+        var result = await useCase.HandleAsync(input, cancellationToken);
+
+        // Check if the operation failed
+        if (!result.IsSuccess)
+        {
+            return HandleUseCaseError(result.Error!);
+        }
+
+        // Return 200 OK
+        return Ok(result.Value);
     }
 
     /// <summary>

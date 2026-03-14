@@ -1,0 +1,29 @@
+meta {
+  name: Update Shipment Status - Not Found
+  type: http
+  seq: 9
+}
+
+patch {
+  url: {{baseUrl}}/v1/shipments/550e8400-e29b-41d4-a716-446655440000/status
+  body: json
+  auth: none
+}
+
+headers {
+  Creator: {{creator}}
+  Content-Type: application/json
+}
+
+body:json {
+  {
+    "status": "in_transit"
+  }
+}
+
+docs {
+  **Erro**: Tenta atualizar shipment que não existe
+  - Resposta esperada: 404 Not Found
+  - Erro: Shipment com o ID informado não foi encontrado
+  - O UUID usado é válido mas não existe um shipment com esse ID
+}
