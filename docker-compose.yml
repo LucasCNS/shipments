@@ -1,31 +1,33 @@
 services:
-  # PostgreSQL Database
+  # PostgreSQL Database (shared for both APIs)
   db:
     image: postgres:16-alpine
-    container_name: shipments-db
+    container_name: postgres-db
     environment:
       POSTGRES_USER: postgres
       POSTGRES_PASSWORD: postgres
-      POSTGRES_DB: shipments
+      POSTGRES_MULTIPLE_DATABASES: shipments,costs
       POSTGRES_INITDB_ARGS: "-c timezone=UTC"
     ports:
       - "5432:5432"
     volumes:
       - postgres_data:/var/lib/postgresql/data
-      - ./scripts/init-db.sql:/docker-entrypoint-initdb.d/init-db.sql
+      - ./scripts/init-db.sql:/docker-entrypoint-initdb.d/01-init-shipments.sql
+      - ./scripts/init-costs-db.sql:/docker-entrypoint-initdb.d/02-init-costs.sql
     networks:
-      - shipments-network
+      - apis-network
     healthcheck:
       test: ["CMD-SHELL", "pg_isready -U postgres"]
       interval: 10s
       timeout: 5s
       retries: 5
 
-  # API Service
-  api:
+  # Shipments API Service
+  shipments-api:
     build:
       context: .
       dockerfile: Dockerfile
+      target: shipments
     container_name: shipments-api
     ports:
       - "8080:8080"
@@ -36,7 +38,31 @@ services:
       db:
         condition: service_healthy
     networks:
-      - shipments-network
+      - apis-network
+    healthcheck:
+      test: ["CMD", "curl", "-f", "http://localhost:8080/health"]
+      interval: 30s
+      timeout: 3s
+      retries: 3
+      start_period: 10s
+
+  # Costs API Service
+  costs-api:
+    build:
+      context: .
+      dockerfile: Dockerfile
+      target: costs
+    container_name: costs-api
+    ports:
+      - "8081:8080"
+    environment:
+      ASPNETCORE_ENVIRONMENT: Development
+      ConnectionStrings__DefaultConnection: "Host=db;Port=5432;Database=costs;Username=postgres;Password=postgres;"
+    depends_on:
+      db:
+        condition: service_healthy
+    networks:
+      - apis-network
     healthcheck:
       test: ["CMD", "curl", "-f", "http://localhost:8080/health"]
       interval: 30s
@@ -49,5 +75,5 @@ volumes:
     driver: local
 
 networks:
-  shipments-network:
+  apis-network:
     driver: bridge

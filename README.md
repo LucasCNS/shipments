@@ -1,6 +1,6 @@
-# Shipments API
+# APIs: Shipments & Costs
 
-> Uma API RESTful para gerenciamento de envios (shipments) desenvolvida com .NET 8.0, implementando os princípios da Clean Architecture e as melhores práticas de desenvolvimento de software.
+> Workspace contendo duas APIs RESTful independentes desenvolvidas com .NET 8.0, implementando os princípios da Clean Architecture e as melhores práticas de desenvolvimento de software.
 
 ## Sumário
 
@@ -12,22 +12,35 @@
 - [Como Executar](#como-executar)
 - [Testes](#testes)
 - [Estrutura do Projeto](#estrutura-do-projeto)
+- [Endpoints da API](#endpoints-da-api)
 - [Referências e Links Úteis](#referências-e-links-úteis)
 
 ## Visão Geral
 
-O projeto Shipments API é uma aplicação educacional e prática desenvolvida para explorar e demonstrar os conceitos fundamentais de Arquitetura de Sistemas em .NET. Trata-se de uma API RESTful que gerencia envios, implementando as melhores práticas de arquitetura, design patterns e padrões de código profissional.
+Este workspace contém **duas soluções .NET independentes**:
 
-### Funcionalidades Principais
+1. **Shipments API** - Gerenciamento de envios com rastreamento de status e atualização de estados
+2. **Costs API** - Gerenciamento de custos de envio (em desenvolvimento)
+
+Ambas as APIs implementam a Clean Architecture, são totalmente independentes e podem ser implantadas e escaladas separadamente. Compartilham apenas a infraestrutura de banco de dados PostgreSQL.
+
+### Funcionalidades Principais - Shipments API
 
 - Criar novos envios (Create)
 - Listar envios com paginação e filtros (Read)
 - Obter detalhes de um envio específico (Read by ID)
 - Atualizar dados de envios existentes (Update)
+- Atualizar status de envios com máquina de estados
 - Validação robusta de dados de entrada
 - API versionada (v1.0)
 - Documentação Swagger/OpenAPI
 - Testes unitários
+
+### Funcionalidades Principais - Costs API
+
+- Gerenciar custos de envio (em desenvolvimento)
+- Estrutura preparada para extensão
+- Reutiliza mesmos padrões e arquitetura da Shipments API
 
 ## Arquitetura
 
@@ -342,10 +355,12 @@ para corrigir vulnerabilidade de segurança.
 ### Pré-requisitos
 
 - .NET SDK 8.0 ou superior (https://dotnet.microsoft.com/download/dotnet/8.0)
+- Docker & Docker Compose (opcional, para execução containerizada)
 - Visual Studio 2022 ou VS Code (https://code.visualstudio.com/)
+- PostgreSQL (local) ou via Docker
 - Conhecimento básico de C# e ASP.NET Core
 
-### Passos de Instalação
+### Execução Local (Desenvolvimento)
 
 #### 1. Clonar o Repositório
 ```bash
@@ -353,17 +368,23 @@ git clone <url-do-repositorio>
 cd shipments
 ```
 
-#### 2. Restaurar Dependências
+#### 2. Restaurar Dependências - Shipments API
 ```bash
-cd src
+cd src/shipments-api
 dotnet restore
 ```
 
-#### 3. Executar a Aplicação
+#### 3. Restaurar Dependências - Costs API
+```bash
+cd src/costs-api
+dotnet restore
+```
+
+#### 4. Executar a Aplicação Shipments
 
 **Via Linha de Comando:**
 ```bash
-cd Shipments.Api
+cd src/shipments-api
 dotnet run
 ```
 
@@ -372,34 +393,119 @@ dotnet run
 2. Define Shipments.Api como projeto de inicialização
 3. Pressione F5 ou clique em "Run"
 
-**Via VS Code:**
-1. Abra a pasta src no VS Code
-2. Pressione F5 para executar
-3. VS Code pedirá para selecionar o projeto de inicialização
+#### 5. Executar a Aplicação Costs
 
-#### 4. Acessar a Aplicação
+**Via Linha de Comando:**
+```bash
+cd src/costs-api
+dotnet run
+```
 
-A API estará disponível em:
-- HTTP: http://localhost:5000
-- HTTPS: https://localhost:5001
+**Via Visual Studio:**
+1. Abra src/costs-api/Costs.sln
+2. Define Costs.Api como projeto de inicialização
+3. Pressione F5 ou clique em "Run"
 
-**Documentação Swagger:**
-- Acesse https://localhost:5001/swagger/index.html
+#### 6. Acessar as Aplicações
+
+**Shipments API:**
+- HTTP: http://localhost:5067
+- HTTPS: https://localhost:7259
+- Swagger: https://localhost:7259/swagger/index.html
+
+**Costs API:**
+- HTTP: http://localhost:5068
+- HTTPS: https://localhost:7260
+- Swagger: https://localhost:7260/swagger/index.html
+
+### Execução com Docker Compose
+
+#### Pré-requisitos Docker
+- Docker Desktop instalado e executando
+- Docker Compose (incluído no Docker Desktop)
+
+#### Passos
+
+1. **Certifique-se que está no diretório raiz do projeto:**
+```bash
+cd shipments
+```
+
+2. **Construir e iniciar todos os serviços:**
+```bash
+docker-compose up --build
+```
+
+3. **Para executar em background:**
+```bash
+docker-compose up -d --build
+```
+
+4. **Visualizar logs:**
+```bash
+docker-compose logs -f
+```
+
+5. **Parar os serviços:**
+```bash
+docker-compose down
+```
+
+#### Acessar as APIs via Docker
+
+**Shipments API:**
+- HTTP: http://localhost:8080
+- Swagger: http://localhost:8080/swagger/index.html
+
+**Costs API:**
+- HTTP: http://localhost:8081
+- Swagger: http://localhost:8081/swagger/index.html
+
+**Banco de Dados PostgreSQL:**
+- Host: localhost
+- Port: 5432
+- User: postgres
+- Password: postgres
+- Databases: shipments, costs
 
 ### Configurações de Desenvolvimento
 
-O arquivo appsettings.Development.json contém configurações específicas para ambiente de desenvolvimento:
+#### Shipments API
+Arquivo: `src/shipments-api/Shipments.Api/appsettings.Development.json`
 
 ```json
 {
   "Logging": {
     "LogLevel": {
-      "Default": "Information",
-      "Microsoft.AspNetCore": "Warning"
+      "Default": "Debug",
+      "Microsoft": "Information",
+      "Microsoft.AspNetCore": "Information"
     }
+  },
+  "ConnectionStrings": {
+    "DefaultConnection": "Host=localhost;Port=5432;Database=shipments;Username=postgres;Password=postgres;"
   }
 }
 ```
+
+#### Costs API
+Arquivo: `src/costs-api/Costs.Api/appsettings.Development.json`
+
+```json
+{
+  "Logging": {
+    "LogLevel": {
+      "Default": "Debug",
+      "Microsoft": "Information",
+      "Microsoft.AspNetCore": "Information"
+    }
+  },
+  "ConnectionStrings": {
+    "DefaultConnection": "Host=localhost;Port=5432;Database=costs;Username=postgres;Password=postgres;"
+  }
+}
+```
+
 
 ## Testes
 
@@ -494,7 +600,7 @@ shipments/
 │   └── test-list-shipments-guide.md  # Guia de testes
 │
 ├── src/
-│   ├── shipments-api/                # API de Shipments
+│   ├── shipments-api/                # API de Shipments (Solução Independente)
 │   │   ├── Shipments.sln             # Solution .NET
 │   │   │
 │   │   ├── Shipments.Api/            # APRESENTAÇÃO
@@ -542,13 +648,70 @@ shipments/
 │   │       │   ├── UseCases/
 │   │       │   └── Validators/
 │   │       └── Shipments.UnitTests.csproj
+│   │
+│   ├── costs-api/                    # API de Costs (Solução Independente)
+│   │   ├── Costs.sln                 # Solution .NET
+│   │   │
+│   │   ├── Costs.Api/                # APRESENTAÇÃO
+│   │   │   ├── Controllers/
+│   │   │   │   └── V1/
+│   │   │   ├── Properties/
+│   │   │   ├── Program.cs
+│   │   │   ├── Costs.Api.csproj
+│   │   │   ├── appsettings.json
+│   │   │   └── appsettings.Development.json
+│   │   │
+│   │   ├── Costs.Application/        # APLICAÇÃO
+│   │   │   ├── UseCases/
+│   │   │   ├── Validators/
+│   │   │   ├── Repositories/
+│   │   │   ├── Services/
+│   │   │   ├── Results/
+│   │   │   ├── DependencyInjection.cs
+│   │   │   └── Costs.Application.csproj
+│   │   │
+│   │   ├── Costs.Domain/             # DOMÍNIO
+│   │   │   ├── Models/
+│   │   │   ├── Results/
+│   │   │   └── Costs.Domain.csproj
+│   │   │
+│   │   ├── Costs.Infrastructure/     # INFRAESTRUTURA
+│   │   │   ├── Persistence/
+│   │   │   │   └── CostsDbContext.cs
+│   │   │   ├── Migrations/
+│   │   │   ├── DependencyInjection.cs
+│   │   │   └── Costs.Infrastructure.csproj
+│   │   │
+│   │   └── Costs.UnitTests/          # TESTES
+│   │       ├── Application/
+│   │       │   ├── UseCases/
+│   │       │   └── Validators/
+│   │       └── Costs.UnitTests.csproj
 │
-├── curl-tests-list-shipments.sh      # Script de teste cURL
-├── test-list-shipments.ps1           # Script PowerShell
-├── rest-client-tests.http            # Testes REST Client
-├── README.md                         # Este arquivo
+├── scripts/
+│   ├── init-db.sql                  # Script inicialização Shipments DB
+│   └── init-costs-db.sql            # Script inicialização Costs DB
+│
+├── collections/                     # Bruno API Client Collections
+│   ├── bruno.json
+│   └── ...
+│
+├── docker-compose.yml               # Configuração multi-serviço
+├── Dockerfile                       # Build de ambas as APIs
+├── curl-tests-list-shipments.sh     # Script de teste cURL
+├── test-list-shipments.ps1          # Script PowerShell
+├── rest-client-tests.http           # Testes REST Client
+├── README.md                        # Este arquivo
 └── LICENSE
 ```
+
+### Características da Estrutura
+
+**Independência das Soluções:**
+- Cada API reside em seu próprio diretório (`src/shipments-api/` e `src/costs-api/`)
+- Cada solução possui seu próprio `.sln` file
+- Nenhuma dependência entre os projetos das duas APIs
+- Cada uma pode ser desenvolvida e deployada independentemente
 
 ## Endpoints da API
 
