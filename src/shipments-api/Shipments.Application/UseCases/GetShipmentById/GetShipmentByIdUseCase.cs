@@ -100,6 +100,8 @@ public class GetShipmentByIdUseCase : IGetShipmentByIdUseCase
                 Weight = shipment.Weight,
                 Dimensions = shipment.Dimensions,
                 ShippingCost = shipment.ShippingCost,
+                OriginZipCode = shipment.OriginZipCode,
+                DestinationZipCode = shipment.DestinationZipCode,
                 DestinationAddress = shipment.DestinationAddress,
                 DateCreated = shipment.DateCreated,
                 DateLastUpdated = shipment.DateLastUpdated,

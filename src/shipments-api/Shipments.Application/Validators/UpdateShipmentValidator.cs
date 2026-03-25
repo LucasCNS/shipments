@@ -60,11 +60,6 @@ public class UpdateShipmentValidator
             }
         }
 
-        // Validate ShippingCost if provided
-        if (input.ShippingCost.HasValue && input.ShippingCost <= 0)
-        {
-            validationErrors.Add("ShippingCost must be greater than zero.");
-        }
 
         // Validate DestinationAddress if provided
         if (!string.IsNullOrWhiteSpace(input.DestinationAddress) && string.IsNullOrWhiteSpace(input.DestinationAddress))
@@ -76,7 +71,6 @@ public class UpdateShipmentValidator
         var hasDataFields = !string.IsNullOrWhiteSpace(input.PackageName) ||
                            input.Weight.HasValue ||
                            input.Dimensions != null ||
-                           input.ShippingCost.HasValue ||
                            !string.IsNullOrWhiteSpace(input.DestinationAddress);
 
         if (!hasDataFields)

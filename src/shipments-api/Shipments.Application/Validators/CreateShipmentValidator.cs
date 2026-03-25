@@ -10,6 +10,8 @@ namespace Shipments.Application.Validators;
 /// </summary>
 public class CreateShipmentValidator
 {
+    private static readonly Regex ZipRegex = new Regex(@"^\d{4,10}(-\d{4})?$", RegexOptions.Compiled);
+
     /// <summary>
     /// Validates the create shipment input.
     /// </summary>
@@ -45,11 +47,13 @@ public class CreateShipmentValidator
             validationErrors.Add("All dimensions (length, width, height) must be greater than zero.");
         }
 
-        // Validate ShippingCost > 0
-        if (input.ShippingCost <= 0)
-        {
-            validationErrors.Add("ShippingCost must be greater than zero.");
-        }
+        // Validate OriginZipCode
+        if (string.IsNullOrWhiteSpace(input.OriginZipCode) || !ZipRegex.IsMatch(input.OriginZipCode))
+            validationErrors.Add("OriginZipCode must be between 4 and 10 digits, optionally followed by a hyphen and 4 digits.");
+
+        // Validate DestinationZipCode
+        if (string.IsNullOrWhiteSpace(input.DestinationZipCode) || !ZipRegex.IsMatch(input.DestinationZipCode))
+            validationErrors.Add("DestinationZipCode must be between 4 and 10 digits, optionally followed by a hyphen and 4 digits.");
 
         // Validate DestinationAddress - not empty
         if (string.IsNullOrWhiteSpace(input.DestinationAddress))

@@ -23,9 +23,14 @@ public class CreateShipmentInput
     public Dimensions? Dimensions { get; set; }
 
     /// <summary>
-    /// Cost of shipping the package.
+    /// Origin ZIP code used to calculate shipping cost.
     /// </summary>
-    public decimal ShippingCost { get; set; }
+    public string? OriginZipCode { get; set; }
+
+    /// <summary>
+    /// Destination ZIP code used to calculate shipping cost.
+    /// </summary>
+    public string? DestinationZipCode { get; set; }
 
     /// <summary>
     /// Destination address for the shipment.

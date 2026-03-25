@@ -28,11 +28,6 @@ public class UpdateShipmentInput
     public Dimensions? Dimensions { get; set; }
 
     /// <summary>
-    /// Cost of shipping the package.
-    /// </summary>
-    public decimal? ShippingCost { get; set; }
-
-    /// <summary>
     /// Destination address for the shipment.
     /// </summary>
     public string? DestinationAddress { get; set; }
