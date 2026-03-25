@@ -4,6 +4,7 @@ using System.Threading.Tasks;
 using Xunit;
 using Moq;
 using Microsoft.Extensions.Logging;
+using Shipments.Application.ExternalServices;
 using Shipments.Application.Repositories;
 using Shipments.Application.UseCases.UpdateShipment;
 using Shipments.Domain.Models;
@@ -17,6 +18,7 @@ namespace Shipments.UnitTests.Application.UseCases;
 public class UpdateShipmentUseCaseTests
 {
     private readonly Mock<IShipmentRepository> _repositoryMock;
+    private readonly Mock<IShippingCostServiceClient> _costServiceClientMock;
     private readonly Mock<ILogger<UpdateShipmentUseCase>> _loggerMock;
     private readonly UpdateShipmentUseCase _useCase;
 
@@ -26,8 +28,12 @@ public class UpdateShipmentUseCaseTests
     public UpdateShipmentUseCaseTests()
     {
         _repositoryMock = new Mock<IShipmentRepository>();
+        _costServiceClientMock = new Mock<IShippingCostServiceClient>();
         _loggerMock = new Mock<ILogger<UpdateShipmentUseCase>>();
-        _useCase = new UpdateShipmentUseCase(_repositoryMock.Object, _loggerMock.Object);
+        _costServiceClientMock
+            .Setup(c => c.CalculateShippingCostAsync(It.IsAny<string>(), It.IsAny<string>(), It.IsAny<decimal>(), It.IsAny<Dimensions>(), It.IsAny<CancellationToken>()))
+            .ReturnsAsync(150m);
+        _useCase = new UpdateShipmentUseCase(_repositoryMock.Object, _costServiceClientMock.Object, _loggerMock.Object);
     }
 
     // ===== Scenario 1: Successful update when pending =====
@@ -47,6 +53,8 @@ public class UpdateShipmentUseCaseTests
             Weight = 5m,
             Dimensions = new Dimensions { Length = 10, Width = 10, Height = 10 },
             ShippingCost = 100m,
+            OriginZipCode = "10001",
+            DestinationZipCode = "20001",
             DestinationAddress = "Original Address",
             DateCreated = DateTime.UtcNow.AddDays(-1),
             DateLastUpdated = DateTime.UtcNow.AddDays(-1),
@@ -280,6 +288,8 @@ public class UpdateShipmentUseCaseTests
             Weight = 5m,
             Dimensions = new Dimensions { Length = 10, Width = 10, Height = 10 },
             ShippingCost = 100m,
+            OriginZipCode = "10001",
+            DestinationZipCode = "20001",
             DestinationAddress = "Address",
             DateCreated = DateTime.UtcNow,
             DateLastUpdated = DateTime.UtcNow,
@@ -329,6 +339,8 @@ public class UpdateShipmentUseCaseTests
             Weight = originalWeight,
             Dimensions = new Dimensions { Length = 10, Width = 10, Height = 10 },
             ShippingCost = 100m,
+            OriginZipCode = "10001",
+            DestinationZipCode = "20001",
             DestinationAddress = "Address",
             DateCreated = DateTime.UtcNow,
             DateLastUpdated = DateTime.UtcNow,
@@ -420,7 +432,7 @@ public class UpdateShipmentUseCaseTests
         // Assert
         Assert.NotNull(result);
         Assert.NotNull(result.Error);
-        Assert.Equal("INVALID_SHIPMENT_ID", result.Error.Code);
+        Assert.Equal("VALIDATION_ERROR", result.Error.Code);
         Assert.Equal(400, result.Error.CorrespondingStatusCode);
         _repositoryMock.Verify(repo => repo.GetByIdAsync(It.IsAny<Guid>()), Times.Never);
         _repositoryMock.Verify(repo => repo.UpdateAsync(It.IsAny<Shipment>()), Times.Never);
@@ -444,6 +456,8 @@ public class UpdateShipmentUseCaseTests
             Weight = 5m,
             Dimensions = new Dimensions { Length = 10, Width = 10, Height = 10 },
             ShippingCost = 100m,
+            OriginZipCode = "10001",
+            DestinationZipCode = "20001",
             DestinationAddress = "Address",
             DateCreated = oldDateTime,
             DateLastUpdated = oldDateTime,
@@ -546,6 +560,8 @@ public class UpdateShipmentUseCaseTests
             Weight = 5m,
             Dimensions = new Dimensions { Length = 10, Width = 10, Height = 10 },
             ShippingCost = 100m,
+            OriginZipCode = "10001",
+            DestinationZipCode = "20001",
             DestinationAddress = "Original Address",
             DateCreated = DateTime.UtcNow.AddDays(-1),
             DateLastUpdated = DateTime.UtcNow.AddDays(-1),
@@ -602,7 +618,7 @@ public class UpdateShipmentUseCaseTests
         // Assert
         Assert.NotNull(result);
         Assert.NotNull(result.Error);
-        Assert.Equal("INVALID_SHIPMENT_ID", result.Error.Code);
+        Assert.Equal("VALIDATION_ERROR", result.Error.Code);
         Assert.Equal(400, result.Error.CorrespondingStatusCode);
         _repositoryMock.Verify(repo => repo.GetByIdAsync(It.IsAny<Guid>()), Times.Never);
     }
@@ -689,7 +705,7 @@ public class UpdateShipmentUseCaseTests
         // Assert
         Assert.NotNull(result);
         Assert.NotNull(result.Error);
-        Assert.Equal("NO_FIELDS_TO_UPDATE", result.Error.Code);
+        Assert.Equal("VALIDATION_ERROR", result.Error.Code);
         Assert.Equal(400, result.Error.CorrespondingStatusCode);
         _repositoryMock.Verify(repo => repo.UpdateAsync(It.IsAny<Shipment>()), Times.Never);
     }
@@ -758,6 +774,8 @@ public class UpdateShipmentUseCaseTests
             Weight = 5m,
             Dimensions = new Dimensions { Length = 10, Width = 10, Height = 10 },
             ShippingCost = 100m,
+            OriginZipCode = "10001",
+            DestinationZipCode = "20001",
             DestinationAddress = "Address",
             DateCreated = DateTime.UtcNow,
             DateLastUpdated = DateTime.UtcNow,
@@ -792,4 +810,275 @@ public class UpdateShipmentUseCaseTests
         Assert.Equal(15m, capturedShipment.Weight);
         _repositoryMock.Verify(repo => repo.UpdateAsync(It.IsAny<Shipment>()), Times.Once);
     }
+
+    // ===== Costs API recalculation tests =====
+
+    /// <summary>
+    /// Updating Weight should call Costs API using the stored ZIP codes and update ShippingCost.
+    /// </summary>
+    [Fact]
+    public async Task HandleAsync_UpdateWeight_ShouldCallCostsApiAndUpdateCost()
+    {
+        // Arrange
+        var shipmentId = Guid.NewGuid();
+        var existingShipment = new Shipment
+        {
+            Id = shipmentId,
+            PackageName = "Package",
+            Weight = 5m,
+            Dimensions = new Dimensions { Length = 10, Width = 10, Height = 10 },
+            ShippingCost = 100m,
+            OriginZipCode = "10001",
+            DestinationZipCode = "20001",
+            DestinationAddress = "Address",
+            DateCreated = DateTime.UtcNow,
+            DateLastUpdated = DateTime.UtcNow,
+            Creator = "Creator1",
+            Status = "pending"
+        };
+
+        var input = new UpdateShipmentInput
+        {
+            Id = shipmentId.ToString(),
+            Creator = "Creator1",
+            Weight = 20m
+        };
+
+        _costServiceClientMock
+            .Setup(c => c.CalculateShippingCostAsync(
+                "10001", "20001", It.IsAny<decimal>(),
+                It.IsAny<Dimensions>(), It.IsAny<CancellationToken>()))
+            .ReturnsAsync(200m);
+
+        _repositoryMock
+            .Setup(repo => repo.GetByIdAsync(shipmentId))
+            .ReturnsAsync(existingShipment);
+
+        _repositoryMock
+            .Setup(repo => repo.UpdateAsync(It.IsAny<Shipment>()))
+            .ReturnsAsync((Shipment s) => s);
+
+        // Act
+        var result = await _useCase.HandleAsync(input, CancellationToken.None);
+
+        // Assert
+        Assert.NotNull(result);
+        Assert.Null(result.Error);
+        Assert.Equal(20m, result.Weight);
+        Assert.Equal(200m, result.ShippingCost);
+        _costServiceClientMock.Verify(c => c.CalculateShippingCostAsync(
+            "10001", "20001", It.IsAny<decimal>(),
+            It.IsAny<Dimensions>(), It.IsAny<CancellationToken>()), Times.Once);
+    }
+
+    /// <summary>
+    /// Updating Dimensions should call Costs API using the stored ZIP codes and update ShippingCost.
+    /// </summary>
+    [Fact]
+    public async Task HandleAsync_UpdateDimensions_ShouldCallCostsApiAndUpdateCost()
+    {
+        // Arrange
+        var shipmentId = Guid.NewGuid();
+        var existingShipment = new Shipment
+        {
+            Id = shipmentId,
+            PackageName = "Package",
+            Weight = 5m,
+            Dimensions = new Dimensions { Length = 10, Width = 10, Height = 10 },
+            ShippingCost = 100m,
+            OriginZipCode = "10001",
+            DestinationZipCode = "20001",
+            DestinationAddress = "Address",
+            DateCreated = DateTime.UtcNow,
+            DateLastUpdated = DateTime.UtcNow,
+            Creator = "Creator1",
+            Status = "pending"
+        };
+
+        var input = new UpdateShipmentInput
+        {
+            Id = shipmentId.ToString(),
+            Creator = "Creator1",
+            Dimensions = new Dimensions { Length = 50, Width = 50, Height = 50 }
+        };
+
+        _costServiceClientMock
+            .Setup(c => c.CalculateShippingCostAsync(
+                "10001", "20001", It.IsAny<decimal>(),
+                It.IsAny<Dimensions>(), It.IsAny<CancellationToken>()))
+            .ReturnsAsync(350m);
+
+        _repositoryMock
+            .Setup(repo => repo.GetByIdAsync(shipmentId))
+            .ReturnsAsync(existingShipment);
+
+        _repositoryMock
+            .Setup(repo => repo.UpdateAsync(It.IsAny<Shipment>()))
+            .ReturnsAsync((Shipment s) => s);
+
+        // Act
+        var result = await _useCase.HandleAsync(input, CancellationToken.None);
+
+        // Assert
+        Assert.NotNull(result);
+        Assert.Null(result.Error);
+        Assert.Equal(350m, result.ShippingCost);
+        _costServiceClientMock.Verify(c => c.CalculateShippingCostAsync(
+            "10001", "20001", It.IsAny<decimal>(),
+            It.IsAny<Dimensions>(), It.IsAny<CancellationToken>()), Times.Once);
+    }
+
+    /// <summary>
+    /// Updating only DestinationAddress should NOT call Costs API (cost stays unchanged).
+    /// </summary>
+    [Fact]
+    public async Task HandleAsync_UpdateDestinationAddressOnly_ShouldNotCallCostsApi()
+    {
+        // Arrange
+        var shipmentId = Guid.NewGuid();
+        var existingShipment = new Shipment
+        {
+            Id = shipmentId,
+            PackageName = "Package",
+            Weight = 5m,
+            Dimensions = new Dimensions { Length = 10, Width = 10, Height = 10 },
+            ShippingCost = 100m,
+            OriginZipCode = "10001",
+            DestinationZipCode = "20001",
+            DestinationAddress = "Original Address",
+            DateCreated = DateTime.UtcNow,
+            DateLastUpdated = DateTime.UtcNow,
+            Creator = "Creator1",
+            Status = "pending"
+        };
+
+        var input = new UpdateShipmentInput
+        {
+            Id = shipmentId.ToString(),
+            Creator = "Creator1",
+            DestinationAddress = "New Address"
+        };
+
+        _repositoryMock
+            .Setup(repo => repo.GetByIdAsync(shipmentId))
+            .ReturnsAsync(existingShipment);
+
+        _repositoryMock
+            .Setup(repo => repo.UpdateAsync(It.IsAny<Shipment>()))
+            .ReturnsAsync((Shipment s) => s);
+
+        // Act
+        var result = await _useCase.HandleAsync(input, CancellationToken.None);
+
+        // Assert
+        Assert.NotNull(result);
+        Assert.Null(result.Error);
+        Assert.Equal("New Address", result.DestinationAddress);
+        Assert.Equal(100m, result.ShippingCost); // Cost should remain unchanged
+        _costServiceClientMock.Verify(c => c.CalculateShippingCostAsync(
+            It.IsAny<string>(), It.IsAny<string>(), It.IsAny<decimal>(),
+            It.IsAny<Dimensions>(), It.IsAny<CancellationToken>()), Times.Never);
+    }
+
+    /// <summary>
+    /// When Costs API is unavailable during Weight update, should return 503.
+    /// </summary>
+    [Fact]
+    public async Task HandleAsync_UpdateWeight_WhenCostsApiUnavailable_ShouldReturn503()
+    {
+        // Arrange
+        var shipmentId = Guid.NewGuid();
+        var existingShipment = new Shipment
+        {
+            Id = shipmentId,
+            PackageName = "Package",
+            Weight = 5m,
+            Dimensions = new Dimensions { Length = 10, Width = 10, Height = 10 },
+            ShippingCost = 100m,
+            OriginZipCode = "10001",
+            DestinationZipCode = "20001",
+            DestinationAddress = "Address",
+            DateCreated = DateTime.UtcNow,
+            DateLastUpdated = DateTime.UtcNow,
+            Creator = "Creator1",
+            Status = "pending"
+        };
+
+        var input = new UpdateShipmentInput
+        {
+            Id = shipmentId.ToString(),
+            Creator = "Creator1",
+            Weight = 20m
+        };
+
+        _costServiceClientMock
+            .Setup(c => c.CalculateShippingCostAsync(
+                It.IsAny<string>(), It.IsAny<string>(), It.IsAny<decimal>(),
+                It.IsAny<Dimensions>(), It.IsAny<CancellationToken>()))
+            .ReturnsAsync((decimal?)null);
+
+        _repositoryMock
+            .Setup(repo => repo.GetByIdAsync(shipmentId))
+            .ReturnsAsync(existingShipment);
+
+        // Act
+        var result = await _useCase.HandleAsync(input, CancellationToken.None);
+
+        // Assert
+        Assert.NotNull(result);
+        Assert.NotNull(result.Error);
+        Assert.Equal("COSTS_API_UNAVAILABLE", result.Error.Code);
+        Assert.Equal(503, result.Error.CorrespondingStatusCode);
+        _repositoryMock.Verify(repo => repo.UpdateAsync(It.IsAny<Shipment>()), Times.Never);
+    }
+
+    /// <summary>
+    /// When shipment has no stored ZIP codes and Weight is updated, should return 409 MISSING_ZIP_CODES.
+    /// </summary>
+    [Fact]
+    public async Task HandleAsync_UpdateWeight_WhenShipmentHasNoZipCodes_ShouldReturnMissingZipCodesError()
+    {
+        // Arrange
+        var shipmentId = Guid.NewGuid();
+        var existingShipment = new Shipment
+        {
+            Id = shipmentId,
+            PackageName = "Package",
+            Weight = 5m,
+            Dimensions = new Dimensions { Length = 10, Width = 10, Height = 10 },
+            ShippingCost = 100m,
+            OriginZipCode = null, // No ZIP codes stored
+            DestinationZipCode = null,
+            DestinationAddress = "Address",
+            DateCreated = DateTime.UtcNow,
+            DateLastUpdated = DateTime.UtcNow,
+            Creator = "Creator1",
+            Status = "pending"
+        };
+
+        var input = new UpdateShipmentInput
+        {
+            Id = shipmentId.ToString(),
+            Creator = "Creator1",
+            Weight = 20m
+        };
+
+        _repositoryMock
+            .Setup(repo => repo.GetByIdAsync(shipmentId))
+            .ReturnsAsync(existingShipment);
+
+        // Act
+        var result = await _useCase.HandleAsync(input, CancellationToken.None);
+
+        // Assert
+        Assert.NotNull(result);
+        Assert.NotNull(result.Error);
+        Assert.Equal("MISSING_ZIP_CODES", result.Error.Code);
+        Assert.Equal(409, result.Error.CorrespondingStatusCode);
+        _costServiceClientMock.Verify(c => c.CalculateShippingCostAsync(
+            It.IsAny<string>(), It.IsAny<string>(), It.IsAny<decimal>(),
+            It.IsAny<Dimensions>(), It.IsAny<CancellationToken>()), Times.Never);
+        _repositoryMock.Verify(repo => repo.UpdateAsync(It.IsAny<Shipment>()), Times.Never);
+    }
 }
+

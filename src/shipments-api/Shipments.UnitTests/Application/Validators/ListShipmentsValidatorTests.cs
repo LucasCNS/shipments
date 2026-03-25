@@ -99,7 +99,7 @@ public class ListShipmentsValidatorTests
 
         // Assert
         Assert.NotNull(result);
-        Assert.Equal("INVALID_STATUS", result!.Code);
+        Assert.Equal("VALIDATION_ERROR", result!.Code);
         Assert.Equal(400, result.CorrespondingStatusCode);
     }
 
@@ -123,7 +123,7 @@ public class ListShipmentsValidatorTests
 
         // Assert
         Assert.NotNull(result);
-        Assert.Equal("EMPTY_CREATOR", result!.Code);
+        Assert.Equal("VALIDATION_ERROR", result!.Code);
         Assert.Equal(400, result.CorrespondingStatusCode);
     }
 
@@ -147,7 +147,7 @@ public class ListShipmentsValidatorTests
 
         // Assert
         Assert.NotNull(result);
-        Assert.Equal("EMPTY_CREATOR", result!.Code);
+        Assert.Equal("VALIDATION_ERROR", result!.Code);
     }
 
     /// <summary>
@@ -170,7 +170,7 @@ public class ListShipmentsValidatorTests
 
         // Assert
         Assert.NotNull(result);
-        Assert.Equal("INVALID_OFFSET", result!.Code);
+        Assert.Equal("VALIDATION_ERROR", result!.Code);
         Assert.Equal(400, result.CorrespondingStatusCode);
     }
 
@@ -219,7 +219,7 @@ public class ListShipmentsValidatorTests
 
         // Assert
         Assert.NotNull(result);
-        Assert.Equal("INVALID_LIMIT", result!.Code);
+        Assert.Equal("VALIDATION_ERROR", result!.Code);
         Assert.Equal(400, result.CorrespondingStatusCode);
     }
 
@@ -243,7 +243,7 @@ public class ListShipmentsValidatorTests
 
         // Assert
         Assert.NotNull(result);
-        Assert.Equal("LIMIT_EXCEEDED", result!.Code);
+        Assert.Equal("VALIDATION_ERROR", result!.Code);
         Assert.Equal(400, result.CorrespondingStatusCode);
     }
 
@@ -294,3 +294,4 @@ public class ListShipmentsValidatorTests
         Assert.Null(result);
     }
 }
+

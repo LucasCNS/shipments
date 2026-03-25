@@ -94,7 +94,7 @@ public class GetShipmentByIdUseCaseTests
 
         // Assert
         Assert.NotNull(result.Error);
-        Assert.Equal("INVALID_UUID_FORMAT", result.Error.Code);
+        Assert.Equal("VALIDATION_ERROR", result.Error.Code);
         Assert.Equal(400, result.Error.CorrespondingStatusCode);
         _repositoryMock.Verify(r => r.GetByIdAsync(It.IsAny<Guid>()), Times.Never);
     }
@@ -110,7 +110,7 @@ public class GetShipmentByIdUseCaseTests
 
         // Assert
         Assert.NotNull(result.Error);
-        Assert.Equal("EMPTY_SHIPMENT_ID", result.Error.Code);
+        Assert.Equal("VALIDATION_ERROR", result.Error.Code);
         Assert.Equal(400, result.Error.CorrespondingStatusCode);
     }
 
@@ -125,7 +125,7 @@ public class GetShipmentByIdUseCaseTests
 
         // Assert
         Assert.NotNull(result.Error);
-        Assert.Equal("EMPTY_SHIPMENT_ID", result.Error.Code);
+        Assert.Equal("VALIDATION_ERROR", result.Error.Code);
     }
 
     [Fact]
@@ -340,3 +340,4 @@ public class GetShipmentByIdUseCaseTests
         Assert.True(_loggerMock.Invocations.Count > 0);
     }
 }
+

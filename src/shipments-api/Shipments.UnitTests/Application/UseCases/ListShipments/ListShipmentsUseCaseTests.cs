@@ -195,7 +195,7 @@ public class ListShipmentsUseCaseTests
         // Assert
         Assert.NotNull(result);
         Assert.NotNull(result.Error);
-        Assert.Equal("INVALID_STATUS", result.Error!.Code);
+        Assert.Equal("VALIDATION_ERROR", result.Error!.Code);
         Assert.Equal(400, result.Error.CorrespondingStatusCode);
         Assert.Empty(result.Results);
         _repositoryMock.Verify(repo => repo.GetCountAsync(It.IsAny<string>(), It.IsAny<CancellationToken>()), Times.Never);
@@ -222,7 +222,7 @@ public class ListShipmentsUseCaseTests
         // Assert
         Assert.NotNull(result);
         Assert.NotNull(result.Error);
-        Assert.Equal("EMPTY_CREATOR", result.Error!.Code);
+        Assert.Equal("VALIDATION_ERROR", result.Error!.Code);
     }
 
     /// <summary>
@@ -332,3 +332,4 @@ public class ListShipmentsUseCaseTests
         Assert.Equal(1, result.Total);
     }
 }
+
