@@ -123,6 +123,8 @@ public class ShipmentEFRepository : IShipmentRepository
         existingShipment.Weight = shipment.Weight;
         existingShipment.Dimensions = shipment.Dimensions;
         existingShipment.ShippingCost = shipment.ShippingCost;
+        existingShipment.OriginZipCode = shipment.OriginZipCode;
+        existingShipment.DestinationZipCode = shipment.DestinationZipCode;
         existingShipment.DestinationAddress = shipment.DestinationAddress;
         existingShipment.DateLastUpdated = shipment.DateLastUpdated;
         existingShipment.Status = shipment.Status;
