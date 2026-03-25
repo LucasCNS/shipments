@@ -1,3 +1,4 @@
+using Costs.Application.UseCases.CalculateShippingCost;
 using Microsoft.Extensions.DependencyInjection;
 
 namespace Costs.Application;
@@ -14,7 +15,7 @@ public static class DependencyInjection
     /// <returns>The service collection for chaining.</returns>
     public static IServiceCollection AddApplication(this IServiceCollection services)
     {
-        // Add application services here
+        services.AddScoped<ICalculateShippingCostUseCase, CalculateShippingCostUseCase>();
         return services;
     }
 }
