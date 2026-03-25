@@ -443,3 +443,6 @@ docker-compose.override.yml
 logs/
 *.log
 
+# Claude IA
+CLAUDE.md
+
