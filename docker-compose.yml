@@ -34,6 +34,7 @@ services:
     environment:
       ASPNETCORE_ENVIRONMENT: Development
       ConnectionStrings__DefaultConnection: "Host=db;Port=5432;Database=shipments;Username=postgres;Password=postgres;"
+      ExternalServices__CostsApi__BaseUrl: "http://costs-api:8080/"
     depends_on:
       db:
         condition: service_healthy
