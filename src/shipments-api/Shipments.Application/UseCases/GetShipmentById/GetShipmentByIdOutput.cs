@@ -36,6 +36,16 @@ public class GetShipmentByIdOutput
     public decimal ShippingCost { get; set; }
 
     /// <summary>
+    /// Origin ZIP code used to calculate shipping cost.
+    /// </summary>
+    public string? OriginZipCode { get; set; }
+
+    /// <summary>
+    /// Destination ZIP code used to calculate shipping cost.
+    /// </summary>
+    public string? DestinationZipCode { get; set; }
+
+    /// <summary>
     /// Destination address for the shipment.
     /// </summary>
     public string? DestinationAddress { get; set; }

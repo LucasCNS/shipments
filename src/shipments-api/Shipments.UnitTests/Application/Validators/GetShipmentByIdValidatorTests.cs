@@ -1,3 +1,4 @@
+using System.Linq;
 using Shipments.Application.UseCases.GetShipmentById;
 using Shipments.Application.Validators;
 using Xunit;
@@ -34,7 +35,7 @@ public class GetShipmentByIdValidatorTests
 
         // Assert
         Assert.NotNull(result);
-        Assert.Equal("EMPTY_SHIPMENT_ID", result.Code);
+        Assert.Equal("VALIDATION_ERROR", result.Code);
         Assert.Equal(400, result.CorrespondingStatusCode);
     }
 
@@ -49,7 +50,7 @@ public class GetShipmentByIdValidatorTests
 
         // Assert
         Assert.NotNull(result);
-        Assert.Equal("EMPTY_SHIPMENT_ID", result.Code);
+        Assert.Equal("VALIDATION_ERROR", result.Code);
         Assert.Equal(400, result.CorrespondingStatusCode);
     }
 
@@ -64,7 +65,7 @@ public class GetShipmentByIdValidatorTests
 
         // Assert
         Assert.NotNull(result);
-        Assert.Equal("EMPTY_SHIPMENT_ID", result.Code);
+        Assert.Equal("VALIDATION_ERROR", result.Code);
         Assert.Equal(400, result.CorrespondingStatusCode);
     }
 
@@ -79,7 +80,7 @@ public class GetShipmentByIdValidatorTests
 
         // Assert
         Assert.NotNull(result);
-        Assert.Equal("INVALID_UUID_FORMAT", result.Code);
+        Assert.Equal("VALIDATION_ERROR", result.Code);
         Assert.Equal(400, result.CorrespondingStatusCode);
     }
 
@@ -94,7 +95,7 @@ public class GetShipmentByIdValidatorTests
 
         // Assert
         Assert.NotNull(result);
-        Assert.Equal("INVALID_UUID_FORMAT", result.Code);
+        Assert.Equal("VALIDATION_ERROR", result.Code);
         Assert.Equal(400, result.CorrespondingStatusCode);
     }
 
@@ -109,7 +110,7 @@ public class GetShipmentByIdValidatorTests
 
         // Assert
         Assert.NotNull(result);
-        Assert.Equal("INVALID_UUID_FORMAT", result.Code);
+        Assert.Equal("VALIDATION_ERROR", result.Code);
     }
 
     [Theory]
@@ -140,6 +141,7 @@ public class GetShipmentByIdValidatorTests
         // Assert
         Assert.NotNull(result);
         Assert.NotEmpty(result.Message);
-        Assert.Contains("UUID", result.Message);
+        Assert.Contains(result.ValidationErrors, e => e.Contains("UUID"));
     }
 }
+

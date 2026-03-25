@@ -52,6 +52,12 @@ public class ShipmentsDbContext : DbContext
                 .HasPrecision(12, 2)
                 .IsRequired();
 
+            entity.Property(e => e.OriginZipCode)
+                .HasMaxLength(20);
+
+            entity.Property(e => e.DestinationZipCode)
+                .HasMaxLength(20);
+
             entity.Property(e => e.DestinationAddress)
                 .IsRequired()
                 .HasMaxLength(500);

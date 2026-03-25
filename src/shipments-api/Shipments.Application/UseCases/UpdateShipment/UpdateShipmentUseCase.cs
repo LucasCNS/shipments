@@ -2,6 +2,7 @@ using System;
 using System.Threading;
 using System.Threading.Tasks;
 using Microsoft.Extensions.Logging;
+using Shipments.Application.ExternalServices;
 using Shipments.Application.Repositories;
 using Shipments.Application.Validators;
 using Shipments.Domain.Models;
@@ -14,16 +15,19 @@ namespace Shipments.Application.UseCases.UpdateShipment;
 public class UpdateShipmentUseCase : IUpdateShipmentUseCase
 {
     private readonly IShipmentRepository _repository;
+    private readonly IShippingCostServiceClient _costServiceClient;
     private readonly ILogger<UpdateShipmentUseCase> _logger;
 
     /// <summary>
     /// Initializes a new instance of the UpdateShipmentUseCase class.
     /// </summary>
     /// <param name="repository">The shipment repository.</param>
+    /// <param name="costServiceClient">The shipping cost service client.</param>
     /// <param name="logger">The logger.</param>
-    public UpdateShipmentUseCase(IShipmentRepository repository, ILogger<UpdateShipmentUseCase> logger)
+    public UpdateShipmentUseCase(IShipmentRepository repository, IShippingCostServiceClient costServiceClient, ILogger<UpdateShipmentUseCase> logger)
     {
         _repository = repository ?? throw new ArgumentNullException(nameof(repository));
+        _costServiceClient = costServiceClient ?? throw new ArgumentNullException(nameof(costServiceClient));
         _logger = logger ?? throw new ArgumentNullException(nameof(logger));
     }
 
@@ -89,7 +93,6 @@ public class UpdateShipmentUseCase : IUpdateShipmentUseCase
         var hasDataFields = !string.IsNullOrWhiteSpace(input.PackageName) ||
                            input.Weight.HasValue ||
                            input.Dimensions != null ||
-                           input.ShippingCost.HasValue ||
                            !string.IsNullOrWhiteSpace(input.DestinationAddress);
 
         // Data fields can only be updated when status is "pending"
@@ -127,14 +130,49 @@ public class UpdateShipmentUseCase : IUpdateShipmentUseCase
             existingShipment.Dimensions = input.Dimensions;
         }
 
-        if (input.ShippingCost.HasValue)
-        {
-            existingShipment.ShippingCost = input.ShippingCost.Value;
-        }
-
         if (!string.IsNullOrWhiteSpace(input.DestinationAddress))
         {
             existingShipment.DestinationAddress = input.DestinationAddress;
+        }
+
+        // Recalculate shipping cost when weight or dimensions changed
+        if (input.Weight.HasValue || input.Dimensions != null)
+        {
+            if (string.IsNullOrWhiteSpace(existingShipment.OriginZipCode) ||
+                string.IsNullOrWhiteSpace(existingShipment.DestinationZipCode))
+            {
+                var missingZipError = new Domain.Results.Error
+                {
+                    Code = "MISSING_ZIP_CODES",
+                    Message = "Cannot recalculate shipping cost: shipment has no ZIP codes stored.",
+                    CorrespondingStatusCode = 409
+                };
+                return new UpdateShipmentOutput { Error = missingZipError };
+            }
+
+            _logger.LogInformation("Recalculating shipping cost for shipment {ShipmentId}", shipmentId);
+            var newCost = await _costServiceClient.CalculateShippingCostAsync(
+                existingShipment.OriginZipCode,
+                existingShipment.DestinationZipCode,
+                existingShipment.Weight,
+                existingShipment.Dimensions!,
+                cancellationToken);
+
+            if (newCost == null)
+            {
+                _logger.LogWarning("Costs API unavailable while recalculating for shipment {ShipmentId}", shipmentId);
+                return new UpdateShipmentOutput
+                {
+                    Error = new Domain.Results.Error
+                    {
+                        Code = "COSTS_API_UNAVAILABLE",
+                        Message = "Unable to recalculate shipping cost: Costs API is currently unavailable.",
+                        CorrespondingStatusCode = 503
+                    }
+                };
+            }
+
+            existingShipment.ShippingCost = newCost.Value;
         }
 
         // Update the last modified date
@@ -153,6 +191,8 @@ public class UpdateShipmentUseCase : IUpdateShipmentUseCase
             Weight = updatedShipment.Weight,
             Dimensions = updatedShipment.Dimensions,
             ShippingCost = updatedShipment.ShippingCost,
+            OriginZipCode = updatedShipment.OriginZipCode,
+            DestinationZipCode = updatedShipment.DestinationZipCode,
             DestinationAddress = updatedShipment.DestinationAddress,
             DateCreated = updatedShipment.DateCreated,
             DateLastUpdated = updatedShipment.DateLastUpdated,

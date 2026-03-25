@@ -50,7 +50,7 @@ public class UpdateShipmentValidatorTests
 
         // Assert
         Assert.NotNull(result);
-        Assert.Equal("INVALID_SHIPMENT_ID", result.Code);
+        Assert.Equal("VALIDATION_ERROR", result.Code);
         Assert.Equal(400, result.CorrespondingStatusCode);
     }
 
@@ -72,7 +72,7 @@ public class UpdateShipmentValidatorTests
 
         // Assert
         Assert.NotNull(result);
-        Assert.Equal("INVALID_SHIPMENT_ID", result.Code);
+        Assert.Equal("VALIDATION_ERROR", result.Code);
         Assert.Equal(400, result.CorrespondingStatusCode);
     }
 
@@ -94,7 +94,7 @@ public class UpdateShipmentValidatorTests
 
         // Assert
         Assert.NotNull(result);
-        Assert.Equal("EMPTY_CREATOR", result.Code);
+        Assert.Equal("VALIDATION_ERROR", result.Code);
         Assert.Equal(400, result.CorrespondingStatusCode);
     }
 
@@ -117,7 +117,7 @@ public class UpdateShipmentValidatorTests
 
         // Assert
         Assert.NotNull(result);
-        Assert.Equal("INVALID_PACKAGE_NAME", result.Code);
+        Assert.Equal("VALIDATION_ERROR", result.Code);
         Assert.Equal(400, result.CorrespondingStatusCode);
     }
 
@@ -140,7 +140,7 @@ public class UpdateShipmentValidatorTests
 
         // Assert
         Assert.NotNull(result);
-        Assert.Equal("INVALID_WEIGHT", result.Code);
+        Assert.Equal("VALIDATION_ERROR", result.Code);
         Assert.Equal(400, result.CorrespondingStatusCode);
     }
 
@@ -163,30 +163,7 @@ public class UpdateShipmentValidatorTests
 
         // Assert
         Assert.NotNull(result);
-        Assert.Equal("INVALID_DIMENSIONS", result.Code);
-        Assert.Equal(400, result.CorrespondingStatusCode);
-    }
-
-    /// <summary>
-    /// Validator should return error when ShippingCost is less than or equal to zero.
-    /// </summary>
-    [Fact]
-    public void Validate_WithInvalidShippingCost_ShouldReturnError()
-    {
-        // Arrange
-        var input = new UpdateShipmentInput
-        {
-            Id = Guid.NewGuid().ToString(),
-            Creator = "TestUser",
-            ShippingCost = -10m
-        };
-
-        // Act
-        var result = UpdateShipmentValidator.Validate(input);
-
-        // Assert
-        Assert.NotNull(result);
-        Assert.Equal("INVALID_SHIPPING_COST", result.Code);
+        Assert.Equal("VALIDATION_ERROR", result.Code);
         Assert.Equal(400, result.CorrespondingStatusCode);
     }
 
@@ -204,7 +181,6 @@ public class UpdateShipmentValidatorTests
             PackageName = null,
             Weight = null,
             Dimensions = null,
-            ShippingCost = null,
             DestinationAddress = null
         };
 
@@ -212,7 +188,8 @@ public class UpdateShipmentValidatorTests
         var result = UpdateShipmentValidator.Validate(input);
 
         // Assert
-        Assert.Null(result);
+        Assert.NotNull(result);
+        Assert.Equal("VALIDATION_ERROR", result!.Code);
     }
 
     /// <summary>
@@ -257,3 +234,4 @@ public class UpdateShipmentValidatorTests
         Assert.Null(result);
     }
 }
+

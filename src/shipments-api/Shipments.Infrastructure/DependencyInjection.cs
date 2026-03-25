@@ -2,7 +2,9 @@ using System;
 using Microsoft.EntityFrameworkCore;
 using Microsoft.Extensions.Configuration;
 using Microsoft.Extensions.DependencyInjection;
+using Shipments.Application.ExternalServices;
 using Shipments.Application.Repositories;
+using Shipments.Infrastructure.ExternalServices;
 using Shipments.Infrastructure.Persistence;
 
 namespace Shipments.Infrastructure;
@@ -29,6 +31,16 @@ public static class DependencyInjection
 
         // Register repository with Entity Framework implementation
         services.AddScoped<IShipmentRepository, ShipmentEFRepository>();
+
+        // Register Costs API HTTP client
+        var costsApiBaseUrl = configuration["ExternalServices:CostsApi:BaseUrl"]
+            ?? throw new InvalidOperationException("ExternalServices:CostsApi:BaseUrl configuration is missing.");
+
+        services.AddHttpClient<IShippingCostServiceClient, HttpShippingCostServiceClient>(client =>
+        {
+            client.BaseAddress = new Uri(costsApiBaseUrl);
+            client.Timeout = TimeSpan.FromSeconds(10);
+        });
 
         return services;
     }
