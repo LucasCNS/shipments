@@ -53,13 +53,13 @@ public class GetShipmentByIdUseCaseTests
         var result = await _useCase.HandleAsync(input, CancellationToken.None);
 
         // Assert
-        Assert.Null(result.Error);
-        Assert.Equal(shipmentId, result.Id);
-        Assert.Equal("Test Package", result.PackageName);
-        Assert.Equal(1.5m, result.Weight);
-        Assert.Equal(100m, result.ShippingCost);
-        Assert.Equal("testuser", result.Creator);
-        Assert.Equal("pending", result.Status);
+        Assert.True(result.IsSuccess);
+        Assert.Equal(shipmentId, result.Value!.Id);
+        Assert.Equal("Test Package", result.Value!.PackageName);
+        Assert.Equal(1.5m, result.Value!.Weight);
+        Assert.Equal(100m, result.Value!.ShippingCost);
+        Assert.Equal("testuser", result.Value!.Creator);
+        Assert.Equal("pending", result.Value!.Status);
         _repositoryMock.Verify(r => r.GetByIdAsync(shipmentId), Times.Once);
     }
 
@@ -77,6 +77,7 @@ public class GetShipmentByIdUseCaseTests
         var result = await _useCase.HandleAsync(input, CancellationToken.None);
 
         // Assert
+        Assert.False(result.IsSuccess);
         Assert.NotNull(result.Error);
         Assert.Equal("SHIPMENT_NOT_FOUND", result.Error.Code);
         Assert.Equal(404, result.Error.CorrespondingStatusCode);
@@ -93,6 +94,7 @@ public class GetShipmentByIdUseCaseTests
         var result = await _useCase.HandleAsync(input, CancellationToken.None);
 
         // Assert
+        Assert.False(result.IsSuccess);
         Assert.NotNull(result.Error);
         Assert.Equal("VALIDATION_ERROR", result.Error.Code);
         Assert.Equal(400, result.Error.CorrespondingStatusCode);
@@ -109,6 +111,7 @@ public class GetShipmentByIdUseCaseTests
         var result = await _useCase.HandleAsync(input, CancellationToken.None);
 
         // Assert
+        Assert.False(result.IsSuccess);
         Assert.NotNull(result.Error);
         Assert.Equal("VALIDATION_ERROR", result.Error.Code);
         Assert.Equal(400, result.Error.CorrespondingStatusCode);
@@ -124,6 +127,7 @@ public class GetShipmentByIdUseCaseTests
         var result = await _useCase.HandleAsync(input, CancellationToken.None);
 
         // Assert
+        Assert.False(result.IsSuccess);
         Assert.NotNull(result.Error);
         Assert.Equal("VALIDATION_ERROR", result.Error.Code);
     }
@@ -142,6 +146,7 @@ public class GetShipmentByIdUseCaseTests
         var result = await _useCase.HandleAsync(input, CancellationToken.None);
 
         // Assert
+        Assert.False(result.IsSuccess);
         Assert.NotNull(result.Error);
         Assert.Equal("REPOSITORY_ERROR", result.Error.Code);
         Assert.Equal(500, result.Error.CorrespondingStatusCode);
@@ -174,7 +179,7 @@ public class GetShipmentByIdUseCaseTests
         var result = await _useCase.HandleAsync(input, CancellationToken.None);
 
         // Assert
-        Assert.Null(result.Error);
+        Assert.True(result.IsSuccess);
         Assert.True(_loggerMock.Invocations.Count > 0);
     }
 
@@ -192,6 +197,7 @@ public class GetShipmentByIdUseCaseTests
         var result = await _useCase.HandleAsync(input, CancellationToken.None);
 
         // Assert
+        Assert.False(result.IsSuccess);
         Assert.NotNull(result.Error);
         Assert.True(_loggerMock.Invocations.Count > 0);
     }
@@ -206,6 +212,7 @@ public class GetShipmentByIdUseCaseTests
         var result = await _useCase.HandleAsync(input, CancellationToken.None);
 
         // Assert
+        Assert.False(result.IsSuccess);
         Assert.NotNull(result.Error);
         Assert.True(_loggerMock.Invocations.Count > 0);
     }
@@ -237,7 +244,7 @@ public class GetShipmentByIdUseCaseTests
 
         // Act & Assert - Should not throw
         var result = await _useCase.HandleAsync(input, cts.Token);
-        Assert.Null(result.Error);
+        Assert.True(result.IsSuccess);
     }
 
     [Fact]
@@ -271,20 +278,20 @@ public class GetShipmentByIdUseCaseTests
         var result = await _useCase.HandleAsync(input, CancellationToken.None);
 
         // Assert
-        Assert.Null(result.Error);
-        Assert.Equal(shipmentId, result.Id);
-        Assert.Equal("Premium Package", result.PackageName);
-        Assert.Equal(2.75m, result.Weight);
-        Assert.Equal(250.99m, result.ShippingCost);
-        Assert.Equal("456 Oak Ave, City, State 12345", result.DestinationAddress);
-        Assert.Equal(dateCreated, result.DateCreated);
-        Assert.Equal(dateUpdated, result.DateLastUpdated);
-        Assert.Equal("john.doe@example.com", result.Creator);
-        Assert.Equal("pending", result.Status);
-        Assert.NotNull(result.Dimensions);
-        Assert.Equal(20, result.Dimensions.Length);
-        Assert.Equal(15, result.Dimensions.Width);
-        Assert.Equal(10, result.Dimensions.Height);
+        Assert.True(result.IsSuccess);
+        Assert.Equal(shipmentId, result.Value!.Id);
+        Assert.Equal("Premium Package", result.Value!.PackageName);
+        Assert.Equal(2.75m, result.Value!.Weight);
+        Assert.Equal(250.99m, result.Value!.ShippingCost);
+        Assert.Equal("456 Oak Ave, City, State 12345", result.Value!.DestinationAddress);
+        Assert.Equal(dateCreated, result.Value!.DateCreated);
+        Assert.Equal(dateUpdated, result.Value!.DateLastUpdated);
+        Assert.Equal("john.doe@example.com", result.Value!.Creator);
+        Assert.Equal("pending", result.Value!.Status);
+        Assert.NotNull(result.Value!.Dimensions);
+        Assert.Equal(20, result.Value!.Dimensions.Length);
+        Assert.Equal(15, result.Value!.Dimensions.Width);
+        Assert.Equal(10, result.Value!.Dimensions.Height);
     }
 
     [Theory]
@@ -318,8 +325,8 @@ public class GetShipmentByIdUseCaseTests
         var result = await _useCase.HandleAsync(input, CancellationToken.None);
 
         // Assert
-        Assert.Null(result.Error);
-        Assert.Equal(status, result.Status);
+        Assert.True(result.IsSuccess);
+        Assert.Equal(status, result.Value!.Status);
     }
 
     [Fact]
@@ -336,6 +343,7 @@ public class GetShipmentByIdUseCaseTests
         var result = await _useCase.HandleAsync(input, CancellationToken.None);
 
         // Assert
+        Assert.False(result.IsSuccess);
         Assert.NotNull(result.Error);
         Assert.True(_loggerMock.Invocations.Count > 0);
     }

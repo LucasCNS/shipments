@@ -91,16 +91,16 @@ public class ShipmentsController : ControllerBase
         };
 
         // Execute use case
-        var output = await useCase.HandleAsync(input, cancellationToken);
+        var result = await useCase.HandleAsync(input, cancellationToken);
 
-        // Check if there was a validation error
-        if (output.Error != null)
+        // Check if the operation failed
+        if (!result.IsSuccess)
         {
-            return HandleUseCaseError(output.Error);
+            return HandleUseCaseError(result.Error!);
         }
 
         // Return 200 OK
-        return Ok(output);
+        return Ok(result.Value);
     }
 
     /// <summary>
@@ -128,16 +128,16 @@ public class ShipmentsController : ControllerBase
         var input = new GetShipmentByIdInput { ShipmentId = id };
 
         // Execute use case
-        var output = await useCase.HandleAsync(input, cancellationToken);
+        var result = await useCase.HandleAsync(input, cancellationToken);
 
-        // Check if there was an error
-        if (output.Error != null)
+        // Check if the operation failed
+        if (!result.IsSuccess)
         {
-            return HandleUseCaseError(output.Error);
+            return HandleUseCaseError(result.Error!);
         }
 
         // Return 200 OK
-        return Ok(output);
+        return Ok(result.Value);
     }
 
     /// <summary>
@@ -171,16 +171,16 @@ public class ShipmentsController : ControllerBase
         input.Creator = creator;
 
         // Execute use case
-        var output = await useCase.HandleAsync(input, cancellationToken);
+        var result = await useCase.HandleAsync(input, cancellationToken);
 
-        // Check if there was an error
-        if (output.Error != null)
+        // Check if the operation failed
+        if (!result.IsSuccess)
         {
-            return HandleUseCaseError(output.Error);
+            return HandleUseCaseError(result.Error!);
         }
 
         // Return 200 OK
-        return Ok(output);
+        return Ok(result.Value);
     }
 
     /// <summary>

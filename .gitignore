@@ -446,3 +446,7 @@ logs/
 # Claude IA
 CLAUDE.md
 
+# Docs de estudo
+dependency-injection.pdf
+dependency-injection.html
+

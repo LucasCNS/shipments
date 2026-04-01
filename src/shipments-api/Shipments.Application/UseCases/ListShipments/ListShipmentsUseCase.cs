@@ -5,6 +5,7 @@ using System.Threading;
 using System.Threading.Tasks;
 using Microsoft.Extensions.Logging;
 using Shipments.Application.Repositories;
+using Shipments.Application.Results;
 using Shipments.Application.Validators;
 
 namespace Shipments.Application.UseCases.ListShipments;
@@ -34,7 +35,7 @@ public class ListShipmentsUseCase : IListShipmentsUseCase
     /// <param name="input">The input data for listing shipments.</param>
     /// <param name="cancellationToken">Cancellation token for the operation.</param>
     /// <returns>The shipments list output.</returns>
-    public async Task<ListShipmentsOutput> HandleAsync(ListShipmentsInput input, CancellationToken cancellationToken)
+    public async Task<Result<ListShipmentsOutput>> HandleAsync(ListShipmentsInput input, CancellationToken cancellationToken)
     {
         // Validate input
         var validationError = ListShipmentsValidator.Validate(input);
@@ -43,10 +44,7 @@ public class ListShipmentsUseCase : IListShipmentsUseCase
             _logger.LogWarning("Validation error when listing shipments: {Code} - {Message}",
                 validationError.Code, validationError.Message);
 
-            return new ListShipmentsOutput
-            {
-                Error = validationError
-            };
+            return Result<ListShipmentsOutput>.Failure(validationError);
         }
 
         // Log the request
@@ -63,13 +61,12 @@ public class ListShipmentsUseCase : IListShipmentsUseCase
             total, results.Count(), input.Offset);
 
         // Return output
-        return new ListShipmentsOutput
+        return Result<ListShipmentsOutput>.Success(new ListShipmentsOutput
         {
             Total = total,
             Offset = input.Offset,
             Limit = input.Limit,
-            Results = results.ToList(),
-            Error = null
-        };
+            Results = results.ToList()
+        });
     }
 }

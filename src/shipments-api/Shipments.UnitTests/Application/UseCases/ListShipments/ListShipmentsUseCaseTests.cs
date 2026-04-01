@@ -84,11 +84,11 @@ public class ListShipmentsUseCaseTests
 
         // Assert
         Assert.NotNull(result);
-        Assert.Equal(2, result.Total);
-        Assert.Equal(0, result.Offset);
-        Assert.Equal(10, result.Limit);
-        Assert.Equal(2, result.Results.Count);
-        Assert.Null(result.Error);
+        Assert.True(result.IsSuccess);
+        Assert.Equal(2, result.Value!.Total);
+        Assert.Equal(0, result.Value!.Offset);
+        Assert.Equal(10, result.Value!.Limit);
+        Assert.Equal(2, result.Value!.Results.Count);
         _repositoryMock.Verify(repo => repo.GetCountAsync("pending", CancellationToken.None), Times.Once);
         _repositoryMock.Verify(repo => repo.GetAllAsync("pending", 0, 10, CancellationToken.None), Times.Once);
     }
@@ -127,9 +127,9 @@ public class ListShipmentsUseCaseTests
 
         // Assert
         Assert.NotNull(result);
-        Assert.Equal(2, result.Total);
-        Assert.Equal(2, result.Results.Count);
-        Assert.Null(result.Error);
+        Assert.True(result.IsSuccess);
+        Assert.Equal(2, result.Value!.Total);
+        Assert.Equal(2, result.Value!.Results.Count);
     }
 
     /// <summary>
@@ -167,10 +167,11 @@ public class ListShipmentsUseCaseTests
 
         // Assert
         Assert.NotNull(result);
-        Assert.Equal(100, result.Total);
-        Assert.Equal(10, result.Offset);
-        Assert.Equal(5, result.Limit);
-        Assert.Equal(3, result.Results.Count);
+        Assert.True(result.IsSuccess);
+        Assert.Equal(100, result.Value!.Total);
+        Assert.Equal(10, result.Value!.Offset);
+        Assert.Equal(5, result.Value!.Limit);
+        Assert.Equal(3, result.Value!.Results.Count);
         _repositoryMock.Verify(repo => repo.GetAllAsync(null, 10, 5, CancellationToken.None), Times.Once);
     }
 
@@ -194,10 +195,10 @@ public class ListShipmentsUseCaseTests
 
         // Assert
         Assert.NotNull(result);
+        Assert.False(result.IsSuccess);
         Assert.NotNull(result.Error);
         Assert.Equal("VALIDATION_ERROR", result.Error!.Code);
         Assert.Equal(400, result.Error.CorrespondingStatusCode);
-        Assert.Empty(result.Results);
         _repositoryMock.Verify(repo => repo.GetCountAsync(It.IsAny<string>(), It.IsAny<CancellationToken>()), Times.Never);
     }
 
@@ -221,6 +222,7 @@ public class ListShipmentsUseCaseTests
 
         // Assert
         Assert.NotNull(result);
+        Assert.False(result.IsSuccess);
         Assert.NotNull(result.Error);
         Assert.Equal("VALIDATION_ERROR", result.Error!.Code);
     }
@@ -253,9 +255,9 @@ public class ListShipmentsUseCaseTests
 
         // Assert
         Assert.NotNull(result);
-        Assert.Equal(0, result.Total);
-        Assert.Empty(result.Results);
-        Assert.Null(result.Error);
+        Assert.True(result.IsSuccess);
+        Assert.Equal(0, result.Value!.Total);
+        Assert.Empty(result.Value!.Results);
     }
 
     /// <summary>
@@ -327,9 +329,10 @@ public class ListShipmentsUseCaseTests
 
         // Assert
         Assert.NotNull(result);
-        Assert.Equal(25, result.Limit); // Limit should be 25 as requested
-        Assert.Single(result.Results); // Only 1 result returned
-        Assert.Equal(1, result.Total);
+        Assert.True(result.IsSuccess);
+        Assert.Equal(25, result.Value!.Limit); // Limit should be 25 as requested
+        Assert.Single(result.Value!.Results); // Only 1 result returned
+        Assert.Equal(1, result.Value!.Total);
     }
 }
 

@@ -1,7 +1,5 @@
 using System.Collections.Generic;
-using System.Text.Json.Serialization;
 using Shipments.Domain.Models;
-using Shipments.Domain.Results;
 
 namespace Shipments.Application.UseCases.ListShipments;
 
@@ -30,9 +28,4 @@ public class ListShipmentsOutput
     /// </summary>
     public List<Shipment> Results { get; set; } = new();
 
-    /// <summary>
-    /// Error information if the operation failed; null if successful.
-    /// </summary>
-    [JsonIgnore(Condition = JsonIgnoreCondition.WhenWritingNull)]
-    public Error? Error { get; set; }
 }

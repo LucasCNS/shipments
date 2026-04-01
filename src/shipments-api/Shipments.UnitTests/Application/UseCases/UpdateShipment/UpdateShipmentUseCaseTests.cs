@@ -84,12 +84,12 @@ public class UpdateShipmentUseCaseTests
 
         // Assert
         Assert.NotNull(result);
-        Assert.Null(result.Error);
-        Assert.Equal(shipmentId, result.Id);
-        Assert.Equal("Updated Package", result.PackageName);
-        Assert.Equal(10m, result.Weight);
-        Assert.Equal("Updated Address", result.DestinationAddress);
-        Assert.Equal("pending", result.Status); // Status should NOT change
+        Assert.True(result.IsSuccess);
+        Assert.Equal(shipmentId, result.Value!.Id);
+        Assert.Equal("Updated Package", result.Value!.PackageName);
+        Assert.Equal(10m, result.Value!.Weight);
+        Assert.Equal("Updated Address", result.Value!.DestinationAddress);
+        Assert.Equal("pending", result.Value!.Status); // Status should NOT change
         _repositoryMock.Verify(repo => repo.UpdateAsync(It.IsAny<Shipment>()), Times.Once);
     }
 
@@ -133,6 +133,7 @@ public class UpdateShipmentUseCaseTests
 
         // Assert
         Assert.NotNull(result);
+        Assert.False(result.IsSuccess);
         Assert.NotNull(result.Error);
         Assert.Equal("SHIPMENT_NOT_UPDATABLE", result.Error.Code);
         Assert.Equal(409, result.Error.CorrespondingStatusCode);
@@ -185,9 +186,9 @@ public class UpdateShipmentUseCaseTests
 
         // Assert
         Assert.NotNull(result);
-        Assert.Null(result.Error);
-        Assert.Equal("Updated Package", result.PackageName);
-        Assert.Equal("pending", result.Status); // Status should remain unchanged
+        Assert.True(result.IsSuccess);
+        Assert.Equal("Updated Package", result.Value!.PackageName);
+        Assert.Equal("pending", result.Value!.Status); // Status should remain unchanged
         _repositoryMock.Verify(repo => repo.UpdateAsync(It.IsAny<Shipment>()), Times.Once);
     }
 
@@ -213,6 +214,7 @@ public class UpdateShipmentUseCaseTests
 
         // Assert
         Assert.NotNull(result);
+        Assert.False(result.IsSuccess);
         Assert.NotNull(result.Error);
         Assert.Equal("VALIDATION_ERROR", result.Error.Code);
         Assert.Equal(400, result.Error.CorrespondingStatusCode);
@@ -266,10 +268,10 @@ public class UpdateShipmentUseCaseTests
 
         // Assert
         Assert.NotNull(result);
-        Assert.Null(result.Error);
-        Assert.Equal("Updated", result.PackageName);
-        Assert.Equal(originalWeight, result.Weight); // Should remain unchanged
-        Assert.Equal(originalCost, result.ShippingCost); // Should remain unchanged
+        Assert.True(result.IsSuccess);
+        Assert.Equal("Updated", result.Value!.PackageName);
+        Assert.Equal(originalWeight, result.Value!.Weight); // Should remain unchanged
+        Assert.Equal(originalCost, result.Value!.ShippingCost); // Should remain unchanged
     }
 
     /// <summary>
@@ -317,9 +319,9 @@ public class UpdateShipmentUseCaseTests
 
         // Assert
         Assert.NotNull(result);
-        Assert.Null(result.Error);
-        Assert.Equal(15m, result.Weight);
-        Assert.Equal(originalPackageName, result.PackageName); // Should remain unchanged
+        Assert.True(result.IsSuccess);
+        Assert.Equal(15m, result.Value!.Weight);
+        Assert.Equal(originalPackageName, result.Value!.PackageName); // Should remain unchanged
     }
 
     /// <summary>
@@ -369,13 +371,13 @@ public class UpdateShipmentUseCaseTests
 
         // Assert
         Assert.NotNull(result);
-        Assert.Null(result.Error);
-        Assert.NotNull(result.Dimensions);
-        Assert.Equal(20, result.Dimensions.Length);
-        Assert.Equal(15, result.Dimensions.Width);
-        Assert.Equal(12, result.Dimensions.Height);
-        Assert.Equal(originalWeight, result.Weight); // Should remain unchanged
-        Assert.Equal(originalPackageName, result.PackageName); // Should remain unchanged
+        Assert.True(result.IsSuccess);
+        Assert.NotNull(result.Value!.Dimensions);
+        Assert.Equal(20, result.Value!.Dimensions.Length);
+        Assert.Equal(15, result.Value!.Dimensions.Width);
+        Assert.Equal(12, result.Value!.Dimensions.Height);
+        Assert.Equal(originalWeight, result.Value!.Weight); // Should remain unchanged
+        Assert.Equal(originalPackageName, result.Value!.PackageName); // Should remain unchanged
     }
 
     // ===== Scenario 6: Shipment not found =====
@@ -404,6 +406,7 @@ public class UpdateShipmentUseCaseTests
 
         // Assert
         Assert.NotNull(result);
+        Assert.False(result.IsSuccess);
         Assert.NotNull(result.Error);
         Assert.Equal("SHIPMENT_NOT_FOUND", result.Error.Code);
         Assert.Equal(404, result.Error.CorrespondingStatusCode);
@@ -431,6 +434,7 @@ public class UpdateShipmentUseCaseTests
 
         // Assert
         Assert.NotNull(result);
+        Assert.False(result.IsSuccess);
         Assert.NotNull(result.Error);
         Assert.Equal("VALIDATION_ERROR", result.Error.Code);
         Assert.Equal(400, result.Error.CorrespondingStatusCode);
@@ -487,8 +491,8 @@ public class UpdateShipmentUseCaseTests
 
         // Assert
         Assert.NotNull(result);
-        Assert.True(result.DateLastUpdated >= beforeUpdate && result.DateLastUpdated <= afterUpdate);
-        Assert.True(result.DateLastUpdated > oldDateTime);
+        Assert.True(result.Value!.DateLastUpdated >= beforeUpdate && result.Value!.DateLastUpdated <= afterUpdate);
+        Assert.True(result.Value!.DateLastUpdated > oldDateTime);
     }
 
     /// <summary>
@@ -533,15 +537,15 @@ public class UpdateShipmentUseCaseTests
 
         // Assert
         Assert.NotNull(result);
-        Assert.Null(result.Error);
-        Assert.Equal(shipmentId, result.Id);
-        Assert.Equal("Updated Package", result.PackageName);
-        Assert.Equal(5m, result.Weight);
-        Assert.NotNull(result.Dimensions);
-        Assert.Equal(100m, result.ShippingCost);
-        Assert.Equal("Address", result.DestinationAddress);
-        Assert.Equal("Creator1", result.Creator);
-        Assert.Equal("pending", result.Status);
+        Assert.True(result.IsSuccess);
+        Assert.Equal(shipmentId, result.Value!.Id);
+        Assert.Equal("Updated Package", result.Value!.PackageName);
+        Assert.Equal(5m, result.Value!.Weight);
+        Assert.NotNull(result.Value!.Dimensions);
+        Assert.Equal(100m, result.Value!.ShippingCost);
+        Assert.Equal("Address", result.Value!.DestinationAddress);
+        Assert.Equal("Creator1", result.Value!.Creator);
+        Assert.Equal("pending", result.Value!.Status);
     }
 
 
@@ -590,11 +594,11 @@ public class UpdateShipmentUseCaseTests
 
         // Assert
         Assert.NotNull(result);
-        Assert.Null(result.Error);
-        Assert.Equal(shipmentId, result.Id);
-        Assert.Equal("Updated Package", result.PackageName);
-        Assert.Equal(10m, result.Weight);
-        Assert.Equal("pending", result.Status);
+        Assert.True(result.IsSuccess);
+        Assert.Equal(shipmentId, result.Value!.Id);
+        Assert.Equal("Updated Package", result.Value!.PackageName);
+        Assert.Equal(10m, result.Value!.Weight);
+        Assert.Equal("pending", result.Value!.Status);
         _repositoryMock.Verify(repo => repo.GetByIdAsync(shipmentId), Times.Once);
         _repositoryMock.Verify(repo => repo.UpdateAsync(It.IsAny<Shipment>()), Times.Once);
     }
@@ -617,6 +621,7 @@ public class UpdateShipmentUseCaseTests
 
         // Assert
         Assert.NotNull(result);
+        Assert.False(result.IsSuccess);
         Assert.NotNull(result.Error);
         Assert.Equal("VALIDATION_ERROR", result.Error.Code);
         Assert.Equal(400, result.Error.CorrespondingStatusCode);
@@ -661,6 +666,7 @@ public class UpdateShipmentUseCaseTests
 
         // Assert
         Assert.NotNull(result);
+        Assert.False(result.IsSuccess);
         Assert.NotNull(result.Error);
         Assert.Equal("SHIPMENT_NOT_UPDATABLE", result.Error.Code);
         Assert.Equal(409, result.Error.CorrespondingStatusCode);
@@ -704,6 +710,7 @@ public class UpdateShipmentUseCaseTests
 
         // Assert
         Assert.NotNull(result);
+        Assert.False(result.IsSuccess);
         Assert.NotNull(result.Error);
         Assert.Equal("VALIDATION_ERROR", result.Error.Code);
         Assert.Equal(400, result.Error.CorrespondingStatusCode);
@@ -754,9 +761,9 @@ public class UpdateShipmentUseCaseTests
 
         // Assert
         Assert.NotNull(result);
-        Assert.Equal("Updated Package", result.PackageName);
-        Assert.Equal(5m, result.Weight); // Should remain unchanged
-        Assert.Equal(originalDestination, result.DestinationAddress); // Should remain unchanged
+        Assert.Equal("Updated Package", result.Value!.PackageName);
+        Assert.Equal(5m, result.Value!.Weight); // Should remain unchanged
+        Assert.Equal(originalDestination, result.Value!.DestinationAddress); // Should remain unchanged
     }
 
     /// <summary>
@@ -863,9 +870,9 @@ public class UpdateShipmentUseCaseTests
 
         // Assert
         Assert.NotNull(result);
-        Assert.Null(result.Error);
-        Assert.Equal(20m, result.Weight);
-        Assert.Equal(200m, result.ShippingCost);
+        Assert.True(result.IsSuccess);
+        Assert.Equal(20m, result.Value!.Weight);
+        Assert.Equal(200m, result.Value!.ShippingCost);
         _costServiceClientMock.Verify(c => c.CalculateShippingCostAsync(
             "10001", "20001", It.IsAny<decimal>(),
             It.IsAny<Dimensions>(), It.IsAny<CancellationToken>()), Times.Once);
@@ -921,8 +928,8 @@ public class UpdateShipmentUseCaseTests
 
         // Assert
         Assert.NotNull(result);
-        Assert.Null(result.Error);
-        Assert.Equal(350m, result.ShippingCost);
+        Assert.True(result.IsSuccess);
+        Assert.Equal(350m, result.Value!.ShippingCost);
         _costServiceClientMock.Verify(c => c.CalculateShippingCostAsync(
             "10001", "20001", It.IsAny<decimal>(),
             It.IsAny<Dimensions>(), It.IsAny<CancellationToken>()), Times.Once);
@@ -972,9 +979,9 @@ public class UpdateShipmentUseCaseTests
 
         // Assert
         Assert.NotNull(result);
-        Assert.Null(result.Error);
-        Assert.Equal("New Address", result.DestinationAddress);
-        Assert.Equal(100m, result.ShippingCost); // Cost should remain unchanged
+        Assert.True(result.IsSuccess);
+        Assert.Equal("New Address", result.Value!.DestinationAddress);
+        Assert.Equal(100m, result.Value!.ShippingCost); // Cost should remain unchanged
         _costServiceClientMock.Verify(c => c.CalculateShippingCostAsync(
             It.IsAny<string>(), It.IsAny<string>(), It.IsAny<decimal>(),
             It.IsAny<Dimensions>(), It.IsAny<CancellationToken>()), Times.Never);
@@ -1026,6 +1033,7 @@ public class UpdateShipmentUseCaseTests
 
         // Assert
         Assert.NotNull(result);
+        Assert.False(result.IsSuccess);
         Assert.NotNull(result.Error);
         Assert.Equal("COSTS_API_UNAVAILABLE", result.Error.Code);
         Assert.Equal(503, result.Error.CorrespondingStatusCode);
@@ -1072,6 +1080,7 @@ public class UpdateShipmentUseCaseTests
 
         // Assert
         Assert.NotNull(result);
+        Assert.False(result.IsSuccess);
         Assert.NotNull(result.Error);
         Assert.Equal("MISSING_ZIP_CODES", result.Error.Code);
         Assert.Equal(409, result.Error.CorrespondingStatusCode);

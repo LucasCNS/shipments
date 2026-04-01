@@ -3,6 +3,7 @@ using System.Threading;
 using System.Threading.Tasks;
 using Microsoft.Extensions.Logging;
 using Shipments.Application.Repositories;
+using Shipments.Application.Results;
 using Shipments.Application.Validators;
 
 namespace Shipments.Application.UseCases.GetShipmentById;
@@ -32,7 +33,7 @@ public class GetShipmentByIdUseCase : IGetShipmentByIdUseCase
     /// <param name="input">The input data containing the shipment ID.</param>
     /// <param name="cancellationToken">Cancellation token for the operation.</param>
     /// <returns>The shipment retrieval output.</returns>
-    public async Task<GetShipmentByIdOutput> HandleAsync(GetShipmentByIdInput input, CancellationToken cancellationToken)
+    public async Task<Result<GetShipmentByIdOutput>> HandleAsync(GetShipmentByIdInput input, CancellationToken cancellationToken)
     {
         // Validate input
         var validationError = GetShipmentByIdValidator.Validate(input);
@@ -41,10 +42,7 @@ public class GetShipmentByIdUseCase : IGetShipmentByIdUseCase
             _logger.LogWarning("Validation error when retrieving shipment: {Code} - {Message}",
                 validationError.Code, validationError.Message);
 
-            return new GetShipmentByIdOutput
-            {
-                Error = validationError
-            };
+            return Result<GetShipmentByIdOutput>.Failure(validationError);
         }
 
         // Parse the UUID
@@ -59,10 +57,7 @@ public class GetShipmentByIdUseCase : IGetShipmentByIdUseCase
 
             _logger.LogWarning("Invalid UUID format provided: {ShipmentId}", input.ShipmentId);
 
-            return new GetShipmentByIdOutput
-            {
-                Error = error
-            };
+            return Result<GetShipmentByIdOutput>.Failure(error);
         }
 
         try
@@ -84,16 +79,13 @@ public class GetShipmentByIdUseCase : IGetShipmentByIdUseCase
 
                 _logger.LogWarning("Shipment not found with ID: {ShipmentId}", shipmentId);
 
-                return new GetShipmentByIdOutput
-                {
-                    Error = notFoundError
-                };
+                return Result<GetShipmentByIdOutput>.Failure(notFoundError);
             }
 
             _logger.LogInformation("Shipment found successfully with ID: {ShipmentId}", shipmentId);
 
             // Return the shipment data
-            return new GetShipmentByIdOutput
+            return Result<GetShipmentByIdOutput>.Success(new GetShipmentByIdOutput
             {
                 Id = shipment.Id,
                 PackageName = shipment.PackageName,
@@ -106,9 +98,8 @@ public class GetShipmentByIdUseCase : IGetShipmentByIdUseCase
                 DateCreated = shipment.DateCreated,
                 DateLastUpdated = shipment.DateLastUpdated,
                 Creator = shipment.Creator,
-                Status = shipment.Status,
-                Error = null
-            };
+                Status = shipment.Status
+            });
         }
         catch (Exception ex)
         {
@@ -121,10 +112,7 @@ public class GetShipmentByIdUseCase : IGetShipmentByIdUseCase
                 CorrespondingStatusCode = 500
             };
 
-            return new GetShipmentByIdOutput
-            {
-                Error = errorResult
-            };
+            return Result<GetShipmentByIdOutput>.Failure(errorResult);
         }
     }
 }

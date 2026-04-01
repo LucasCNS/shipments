@@ -4,6 +4,7 @@ using System.Threading.Tasks;
 using Microsoft.Extensions.Logging;
 using Shipments.Application.ExternalServices;
 using Shipments.Application.Repositories;
+using Shipments.Application.Results;
 using Shipments.Application.Validators;
 using Shipments.Domain.Models;
 
@@ -37,7 +38,7 @@ public class UpdateShipmentUseCase : IUpdateShipmentUseCase
     /// <param name="input">The input data for updating a shipment.</param>
     /// <param name="cancellationToken">Cancellation token for the operation.</param>
     /// <returns>The shipment update output.</returns>
-    public async Task<UpdateShipmentOutput> HandleAsync(UpdateShipmentInput input, CancellationToken cancellationToken)
+    public async Task<Result<UpdateShipmentOutput>> HandleAsync(UpdateShipmentInput input, CancellationToken cancellationToken)
     {
         _logger.LogInformation("Request to update shipment with ID: {ShipmentId}", input.Id);
 
@@ -48,10 +49,7 @@ public class UpdateShipmentUseCase : IUpdateShipmentUseCase
             _logger.LogWarning("Validation error when updating shipment: {Code} - {Message}",
                 validationError.Code, validationError.Message);
 
-            return new UpdateShipmentOutput
-            {
-                Error = validationError
-            };
+            return Result<UpdateShipmentOutput>.Failure(validationError);
         }
 
         // Parse the ID
@@ -64,10 +62,7 @@ public class UpdateShipmentUseCase : IUpdateShipmentUseCase
                 CorrespondingStatusCode = 400
             };
 
-            return new UpdateShipmentOutput
-            {
-                Error = error
-            };
+            return Result<UpdateShipmentOutput>.Failure(error);
         }
 
         // Retrieve existing shipment
@@ -83,10 +78,7 @@ public class UpdateShipmentUseCase : IUpdateShipmentUseCase
                 CorrespondingStatusCode = 404
             };
 
-            return new UpdateShipmentOutput
-            {
-                Error = error
-            };
+            return Result<UpdateShipmentOutput>.Failure(error);
         }
 
         // Check if data fields are being updated
@@ -108,10 +100,7 @@ public class UpdateShipmentUseCase : IUpdateShipmentUseCase
                 CorrespondingStatusCode = 409
             };
 
-            return new UpdateShipmentOutput
-            {
-                Error = error
-            };
+            return Result<UpdateShipmentOutput>.Failure(error);
         }
 
         // Update only provided fields
@@ -147,7 +136,7 @@ public class UpdateShipmentUseCase : IUpdateShipmentUseCase
                     Message = "Cannot recalculate shipping cost: shipment has no ZIP codes stored.",
                     CorrespondingStatusCode = 409
                 };
-                return new UpdateShipmentOutput { Error = missingZipError };
+                return Result<UpdateShipmentOutput>.Failure(missingZipError);
             }
 
             _logger.LogInformation("Recalculating shipping cost for shipment {ShipmentId}", shipmentId);
@@ -161,15 +150,12 @@ public class UpdateShipmentUseCase : IUpdateShipmentUseCase
             if (newCost == null)
             {
                 _logger.LogWarning("Costs API unavailable while recalculating for shipment {ShipmentId}", shipmentId);
-                return new UpdateShipmentOutput
+                return Result<UpdateShipmentOutput>.Failure(new Domain.Results.Error
                 {
-                    Error = new Domain.Results.Error
-                    {
-                        Code = "COSTS_API_UNAVAILABLE",
-                        Message = "Unable to recalculate shipping cost: Costs API is currently unavailable.",
-                        CorrespondingStatusCode = 503
-                    }
-                };
+                    Code = "COSTS_API_UNAVAILABLE",
+                    Message = "Unable to recalculate shipping cost: Costs API is currently unavailable.",
+                    CorrespondingStatusCode = 503
+                });
             }
 
             existingShipment.ShippingCost = newCost.Value;
@@ -184,7 +170,7 @@ public class UpdateShipmentUseCase : IUpdateShipmentUseCase
         _logger.LogInformation("Shipment updated successfully with ID {ShipmentId}", shipmentId);
 
         // Return output
-        return new UpdateShipmentOutput
+        return Result<UpdateShipmentOutput>.Success(new UpdateShipmentOutput
         {
             Id = updatedShipment!.Id,
             PackageName = updatedShipment.PackageName,
@@ -197,8 +183,7 @@ public class UpdateShipmentUseCase : IUpdateShipmentUseCase
             DateCreated = updatedShipment.DateCreated,
             DateLastUpdated = updatedShipment.DateLastUpdated,
             Creator = updatedShipment.Creator,
-            Status = updatedShipment.Status,
-            Error = null
-        };
+            Status = updatedShipment.Status
+        });
     }
 }
